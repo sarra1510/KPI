@@ -1,0 +1,313 @@
+"""
+Flask web interface for the Sprint KPI Calculator.
+Provides a drag-and-drop file upload and a KPI dashboard in the browser.
+"""
+
+import os
+import uuid
+import pandas as pd
+from flask import (
+    Flask,
+    render_template,
+    request,
+    redirect,
+    url_for,
+    flash,
+    send_from_directory,
+)
+
+from sprint_kpi_calculator import (
+    find_sheet_name,
+    find_header_row,
+    clean_dataframe,
+    find_key_column,
+    calc_capacity_utilization,
+    calc_throughput,
+    calc_unplanned,
+    calc_wip_end_sprint,
+    calc_support_load,
+    find_no_estimation,
+    find_no_tempo,
+    SHEET_START,
+    SHEET_END,
+    SHEET_WORKLOG,
+)
+
+app = Flask(__name__)
+app.secret_key = os.environ.get("SECRET_KEY", "sprint-kpi-web-secret")
+
+UPLOAD_FOLDER = os.path.join(os.path.dirname(__file__), "uploads")
+os.makedirs(UPLOAD_FOLDER, exist_ok=True)
+
+ALLOWED_EXTENSIONS = {"xlsx", "xls"}
+
+
+def allowed_file(filename):
+    return "." in filename and filename.rsplit(".", 1)[1].lower() in ALLOWED_EXTENSIONS
+
+
+def load_data_web(filepath):
+    """
+    Non-interactive version of load_data() for the web interface.
+    Raises ValueError instead of calling input() when sheets cannot be detected.
+    """
+    try:
+        xls = pd.ExcelFile(filepath)
+        available_sheets = xls.sheet_names
+    except Exception as e:
+        raise ValueError(f"Impossible d'ouvrir le fichier Excel : {e}")
+
+    sheet_start = find_sheet_name(
+        available_sheets,
+        SHEET_START,
+        keywords=["start", "début", "debut", "démarrage", "demarrage"],
+        exclude_keywords=["end", "fin"],
+    )
+    sheet_end = find_sheet_name(
+        available_sheets,
+        SHEET_END,
+        keywords=["end", "fin", "sprint end", "end sprint"],
+    )
+    sheet_worklog = find_sheet_name(
+        available_sheets,
+        SHEET_WORKLOG,
+        keywords=["worklog", "worklogs", "tempo"],
+    )
+
+    missing = []
+    if not sheet_start:
+        missing.append("Start (début sprint)")
+    if not sheet_end:
+        missing.append("End Sprint (fin sprint)")
+    if not sheet_worklog:
+        missing.append("Worklogs")
+
+    if missing:
+        raise ValueError(
+            f"Feuilles non détectées : {', '.join(missing)}. "
+            f"Feuilles disponibles : {', '.join(available_sheets)}"
+        )
+
+    h_start = find_header_row(filepath, sheet_start)
+    h_end = find_header_row(filepath, sheet_end)
+    h_wl = find_header_row(filepath, sheet_worklog)
+
+    try:
+        df_start = pd.read_excel(filepath, sheet_name=sheet_start, header=h_start)
+        df_end = pd.read_excel(filepath, sheet_name=sheet_end, header=h_end)
+        df_worklog = pd.read_excel(filepath, sheet_name=sheet_worklog, header=h_wl)
+    except Exception as e:
+        raise ValueError(f"Erreur de lecture du fichier : {e}")
+
+    df_start = clean_dataframe(df_start)
+    df_end = clean_dataframe(df_end)
+    df_worklog = clean_dataframe(df_worklog)
+
+    # Remove rows where Key is empty
+    for candidates, df_ref in [
+        (["Key", "Issue Key", "key", "Clé"], "start"),
+        (["Key", "Issue Key", "key", "Clé"], "end"),
+        (["Issue Key", "Issue key", "Key"], "worklog"),
+    ]:
+        df = df_start if df_ref == "start" else (df_end if df_ref == "end" else df_worklog)
+        for kc in candidates:
+            if kc in df.columns:
+                df = df[df[kc].notna() & (df[kc].astype(str).str.strip() != "")].reset_index(drop=True)
+                break
+        if df_ref == "start":
+            df_start = df
+        elif df_ref == "end":
+            df_end = df
+        else:
+            df_worklog = df
+
+    return df_start, df_end, df_worklog
+
+
+def find_key_column_web(df, sheet_name):
+    """
+    Non-interactive version of find_key_column() for the web interface.
+    Raises ValueError instead of calling input() when column cannot be detected.
+    """
+    import re
+
+    known_names = [
+        "Key", "key", "KEY",
+        "Issue Key", "Issue key", "issue key", "ISSUE KEY",
+        "Issue_Key", "Issue_key",
+        "Clé", "clé", "Clé du ticket",
+        "Ticket Key", "ticket key",
+        "Issue ID", "issue id",
+    ]
+    for col in known_names:
+        if col in df.columns:
+            return col
+
+    normalized_targets = ["key", "issue key", "issue_key", "clé", "ticket key", "issue id"]
+    for col in df.columns:
+        if col.strip().lower() in normalized_targets:
+            return col
+
+    jira_pattern = re.compile(r"^[A-Z][A-Z0-9]+-\d+$")
+    for col in df.columns:
+        sample = df[col].dropna().head(10).astype(str)
+        if len(sample) == 0:
+            continue
+        matches = sample.apply(lambda x: bool(jira_pattern.match(x.strip())))
+        if matches.sum() >= min(3, len(sample)):
+            return col
+
+    raise ValueError(
+        f"Colonne clé Jira non détectée dans la feuille '{sheet_name}'. "
+        f"Colonnes disponibles : {', '.join(df.columns.tolist())}"
+    )
+
+
+def df_to_records(df):
+    """Convert a DataFrame to a list of dicts for template rendering."""
+    if df is None or df.empty:
+        return []
+    return df.where(pd.notnull(df), other="").to_dict(orient="records")
+
+
+@app.route("/")
+def index():
+    return render_template("index.html")
+
+
+@app.route("/calculate", methods=["POST"])
+def calculate():
+    # Validate file upload
+    if "file" not in request.files:
+        flash("Aucun fichier sélectionné.", "danger")
+        return redirect(url_for("index"))
+
+    file = request.files["file"]
+    if file.filename == "":
+        flash("Aucun fichier sélectionné.", "danger")
+        return redirect(url_for("index"))
+
+    if not allowed_file(file.filename):
+        flash("Format de fichier invalide. Veuillez uploader un fichier .xlsx ou .xls.", "danger")
+        return redirect(url_for("index"))
+
+    # Validate capacity
+    try:
+        capacity_hours = float(request.form.get("capacity", "0"))
+        if capacity_hours <= 0:
+            raise ValueError
+    except (ValueError, TypeError):
+        flash("Capacité équipe invalide. Veuillez entrer un nombre positif.", "danger")
+        return redirect(url_for("index"))
+
+    # Save uploaded file with a unique name
+    unique_id = uuid.uuid4().hex
+    original_ext = file.filename.rsplit(".", 1)[1].lower()
+    saved_filename = f"{unique_id}.{original_ext}"
+    filepath = os.path.join(UPLOAD_FOLDER, saved_filename)
+    file.save(filepath)
+
+    try:
+        df_start, df_end, df_worklog = load_data_web(filepath)
+
+        key_col_start = find_key_column_web(df_start, SHEET_START)
+        key_col_end = find_key_column_web(df_end, SHEET_END)
+
+        capacity_util, total_logged = calc_capacity_utilization(df_worklog, capacity_hours)
+        throughput, throughput_details = calc_throughput(df_end, key_col_end)
+        unplanned_count, unplanned_details = calc_unplanned(
+            df_start, df_end, key_col_start, key_col_end
+        )
+        wip_count, wip_details = calc_wip_end_sprint(df_end, key_col_end)
+        support_load = calc_support_load(unplanned_count, throughput)
+        no_est_count, no_est_details = find_no_estimation(df_end, key_col_end)
+        no_tempo_count, no_tempo_details = find_no_tempo(df_end, df_worklog, key_col_end)
+
+    except ValueError as e:
+        flash(str(e), "danger")
+        os.remove(filepath)
+        return redirect(url_for("index"))
+    except Exception as e:
+        flash(f"Erreur inattendue lors du calcul : {e}", "danger")
+        os.remove(filepath)
+        return redirect(url_for("index"))
+
+    # Generate Excel KPI report
+    report_filename = f"{unique_id}_KPI_Report.xlsx"
+    report_path = os.path.join(UPLOAD_FOLDER, report_filename)
+
+    kpi_data = pd.DataFrame(
+        {
+            "KPI": [
+                "Capacité équipe (h)",
+                "Heures loguées (h)",
+                "Capacity Utilization (%)",
+                "Throughput (tickets résolus)",
+                "Unplanned Tickets",
+                "WIP End Sprint",
+                "Support Load (%)",
+                "Tickets sans estimation",
+                "Tickets sans tempo",
+            ],
+            "Valeur": [
+                capacity_hours,
+                total_logged,
+                capacity_util,
+                throughput,
+                unplanned_count,
+                wip_count,
+                support_load if support_load is not None else "N/A",
+                no_est_count,
+                no_tempo_count,
+            ],
+        }
+    )
+
+    with pd.ExcelWriter(report_path, engine="openpyxl") as writer:
+        kpi_data.to_excel(writer, sheet_name="KPI Summary", index=False)
+        if not unplanned_details.empty:
+            unplanned_details.to_excel(writer, sheet_name="Unplanned Tickets", index=False)
+        if not wip_details.empty:
+            wip_details.to_excel(writer, sheet_name="WIP End Sprint", index=False)
+        if not no_est_details.empty:
+            no_est_details.to_excel(writer, sheet_name="Sans Estimation", index=False)
+        if not no_tempo_details.empty:
+            no_tempo_details.to_excel(writer, sheet_name="Sans Tempo", index=False)
+
+    kpis = {
+        "capacity_hours": capacity_hours,
+        "total_logged": total_logged,
+        "capacity_util": capacity_util,
+        "throughput": throughput,
+        "unplanned_count": unplanned_count,
+        "wip_count": wip_count,
+        "support_load": support_load,
+        "no_est_count": no_est_count,
+        "no_tempo_count": no_tempo_count,
+    }
+
+    return render_template(
+        "results.html",
+        kpis=kpis,
+        unplanned_rows=df_to_records(unplanned_details),
+        wip_rows=df_to_records(wip_details),
+        no_est_rows=df_to_records(no_est_details),
+        no_tempo_rows=df_to_records(no_tempo_details),
+        report_filename=report_filename,
+    )
+
+
+@app.route("/download/<filename>")
+def download(filename):
+    # Security: validate filename matches expected pattern (UUID_KPI_Report.xlsx)
+    import re
+    if not re.fullmatch(r"[0-9a-f]{32}_KPI_Report\.xlsx", filename):
+        return "Fichier non autorisé.", 403
+    filepath = os.path.join(UPLOAD_FOLDER, filename)
+    if not os.path.isfile(filepath):
+        return "Fichier introuvable.", 404
+    return send_from_directory(UPLOAD_FOLDER, filename, as_attachment=True)
+
+
+if __name__ == "__main__":
+    app.run(debug=os.environ.get("FLASK_DEBUG", "false").lower() == "true")
