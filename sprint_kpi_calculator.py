@@ -306,7 +306,7 @@ def calc_throughput(df_end, key_col):
     if resolved_col is None:
         res_col = find_column(df_end, ["Resolution", "resolution", "RESOLUTION"])
         if res_col:
-            resolved = df_end[df_end[res_col].notna() & (df_end[res_col].astype(str).str.strip() != "")]  
+            resolved = df_end[df_end[res_col].notna() & (df_end[res_col].astype(str).str.strip() != "")]
             return len(resolved), resolved[[key_col]].copy()
 
         print(f"⚠️  Colonne 'Resolved' introuvable dans End Sprint.")
@@ -321,7 +321,7 @@ def calc_unplanned(df_start, df_end, key_col_start, key_col_end):
     start_keys = set(df_start[key_col_start].dropna().astype(str).str.strip().unique())
     end_keys = set(df_end[key_col_end].dropna().astype(str).str.strip().unique())
     unplanned_keys = end_keys - start_keys
-    unplanned_df = df_end[df_end[key_col_end].astype(str).str.strip().isin(unplanned_keys)]
+    unplanned_df = df_end[df_end[key_col_end].astype(str).strip().isin(unplanned_keys)]
 
     detail_cols = [key_col_end]
     for col in ["Summary", "Status", "Assignee", "Issue Type", "Priority"]:
