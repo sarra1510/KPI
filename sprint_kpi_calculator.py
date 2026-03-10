@@ -43,19 +43,129 @@ def find_key_column(df, sheet_name):
     )
 
 
+def find_sheet_name(available_sheets, expected_name, keywords, exclude_keywords=None):
+    """
+    Find a sheet name from available sheets using flexible matching.
+
+    1. Try exact match
+    2. Try case-insensitive match
+    3. Try stripped + case-insensitive match
+    4. Try keyword-based partial match
+    """
+    # 1. Exact match
+    if expected_name in available_sheets:
+        return expected_name
+
+    # Normalize available sheets for comparison
+    normalized = {s: s.strip().lower() for s in available_sheets}
+
+    # 2. Case-insensitive match
+    target = expected_name.lower()
+    for original, norm in normalized.items():
+        if norm == target:
+            return original
+
+    # 3. Stripped + case-insensitive (handle extra spaces)
+    target_stripped = target.replace(" ", "")
+    for original, norm in normalized.items():
+        if norm.replace(" ", "") == target_stripped:
+            return original
+
+    # 4. Keyword-based partial match
+    for original, norm in normalized.items():
+        if any(kw in norm for kw in keywords):
+            if exclude_keywords and any(ex in norm for ex in exclude_keywords):
+                continue
+            return original
+
+    return None
+
+
 def load_data(filepath):
-    """Load the 3 sheets from the Excel file."""
+    """Load the 3 sheets from the Excel file with flexible sheet name matching."""
     if not os.path.exists(filepath):
         print(f"❌ Fichier introuvable: {filepath}")
         sys.exit(1)
 
     try:
-        df_start = pd.read_excel(filepath, sheet_name=SHEET_START)
-        df_end = pd.read_excel(filepath, sheet_name=SHEET_END)
-        df_worklog = pd.read_excel(filepath, sheet_name=SHEET_WORKLOG)
-    except ValueError as e:
+        xls = pd.ExcelFile(filepath)
+        available_sheets = xls.sheet_names
+    except Exception as e:
+        print(f"❌ Impossible d'ouvrir le fichier: {e}")
+        sys.exit(1)
+
+    print(f"   📋 Feuilles trouvées dans le fichier: {available_sheets}")
+
+    # Flexible sheet name detection
+    sheet_start = find_sheet_name(
+        available_sheets, SHEET_START,
+        keywords=["start", "début", "debut", "démarrage", "demarrage"],
+        exclude_keywords=["end", "fin"]
+    )
+    sheet_end = find_sheet_name(
+        available_sheets, SHEET_END,
+        keywords=["end", "fin", "sprint end", "end sprint"]
+    )
+    sheet_worklog = find_sheet_name(
+        available_sheets, SHEET_WORKLOG,
+        keywords=["worklog", "worklogs", "tempo"]
+    )
+
+    # Report what was found
+    mapping = {
+        "Start (début sprint)": sheet_start,
+        "End Sprint (fin sprint)": sheet_end,
+        "Worklogs": sheet_worklog,
+    }
+
+    missing = []
+    for label, found in mapping.items():
+        if found:
+            print(f"   ✅ {label} → '{found}'")
+        else:
+            print(f"   ❌ {label} → NON TROUVÉE")
+            missing.append(label)
+
+    # If any sheet is missing, ask user to manually map
+    if missing:
+        print(f"\n⚠️  Certaines feuilles n'ont pas été détectées automatiquement.")
+        print(f"   Feuilles disponibles:")
+        for i, s in enumerate(available_sheets):
+            print(f"      [{i}] {s}")
+
+        # Map label keys to their corresponding variable names for clean assignment
+        sheet_vars = {
+            "Start (début sprint)": "start",
+            "End Sprint (fin sprint)": "end",
+            "Worklogs": "worklog",
+        }
+        selected_sheets = {"start": sheet_start, "end": sheet_end, "worklog": sheet_worklog}
+
+        for label in missing:
+            var_key = sheet_vars[label]
+            while True:
+                choice = input(f"\n   Entrez le numéro ou le nom de la feuille pour '{label}': ").strip()
+                if choice.isdigit() and 0 <= int(choice) < len(available_sheets):
+                    selected = available_sheets[int(choice)]
+                elif choice in available_sheets:
+                    selected = choice
+                else:
+                    print(f"   ❌ Choix invalide. Réessayez.")
+                    continue
+                selected_sheets[var_key] = selected
+                print(f"   ✅ {label} → '{selected}'")
+                break
+
+        sheet_start = selected_sheets["start"]
+        sheet_end = selected_sheets["end"]
+        sheet_worklog = selected_sheets["worklog"]
+
+    try:
+        df_start = pd.read_excel(filepath, sheet_name=sheet_start)
+        df_end = pd.read_excel(filepath, sheet_name=sheet_end)
+        df_worklog = pd.read_excel(filepath, sheet_name=sheet_worklog)
+    except Exception as e:
         print(f"❌ Erreur de lecture des feuilles: {e}")
-        print(f"   Feuilles attendues: '{SHEET_START}', '{SHEET_END}', '{SHEET_WORKLOG}'")
         sys.exit(1)
 
     return df_start, df_end, df_worklog

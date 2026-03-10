@@ -33,9 +33,11 @@ Le script vous demandera ensuite de saisir la **capacité équipe en heures** (c
 
 Le fichier `.xlsx` doit contenir **3 feuilles** :
 
-### Feuille 1 — `Start`
+### Feuille 1 — `Start` (démarrage du sprint)
 
 Extract Jira au **démarrage** du sprint.
+
+Noms acceptés (détection flexible) : `Start`, `Sprint Start`, `Début`, `Démarrage`, etc.
 
 Colonnes importantes :
 - `Key` ou `Issue Key` — identifiant unique du ticket (colonne de jointure)
@@ -44,9 +46,11 @@ Colonnes importantes :
 - `Assignee` — responsable
 - `Original Estimate` — estimation initiale en secondes
 
-### Feuille 2 — `End Sprint`
+### Feuille 2 — `End Sprint` (fin du sprint)
 
 Extract Jira à la **fin** du sprint.
+
+Noms acceptés (détection flexible) : `End Sprint`, `Sprint End`, `End`, `Fin`, etc.
 
 Colonnes importantes :
 - `Key` ou `Issue Key` — identifiant unique (colonne de jointure)
@@ -62,9 +66,18 @@ Colonnes importantes :
 
 Worklog de l'équipe sur la période du sprint.
 
+Noms acceptés (détection flexible) : `Worklogs`, `Worklog`, `Tempo`, `Time Log`, etc.
+
 Colonnes importantes :
 - `Issue Key` (ou `Key`) — identifiant du ticket
 - `Hours` (ou `Time Spent` / `Heures`) — heures loggées
+
+> **💡 Détection flexible des noms de feuilles**
+>
+> Le script détecte automatiquement les feuilles même si leurs noms diffèrent légèrement des noms attendus :
+> espaces en début/fin, différences de casse (majuscules/minuscules), espaces insécables, noms partiels
+> (ex : `end sprint` au lieu de `End Sprint`, `worklog` au lieu de `Worklogs`).
+> Si une feuille ne peut pas être détectée automatiquement, le script vous demandera de la sélectionner manuellement.
 
 ---
 
