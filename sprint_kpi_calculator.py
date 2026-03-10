@@ -41,7 +41,6 @@ HEADER_KEYWORDS = [
     "work date", "username", "full name",
 ]
 
-
 def find_header_row(filepath, sheet_name, max_scan=20):
     """Scan first rows to find the real header row in Jira exports."""
     try:
@@ -60,13 +59,11 @@ def find_header_row(filepath, sheet_name, max_scan=20):
 
     return 0
 
-
 def clean_dataframe(df):
     """Clean column names and drop empty rows."""
     df.columns = [str(c).strip().replace('\xa0', ' ') for c in df.columns]
     df = df.dropna(how='all').reset_index(drop=True)
     return df
-
 
 def find_key_column(df, sheet_name):
     """
@@ -123,7 +120,6 @@ def find_key_column(df, sheet_name):
         else:
             print(f"   ❌ Choix invalide. Réessayez.")
 
-
 def find_column(df, candidates):
     """Generic flexible column finder."""
     for col in candidates:
@@ -134,7 +130,6 @@ def find_column(df, candidates):
         if col.strip().lower() in normalized_candidates:
             return col
     return None
-
 
 def find_sheet_name(available_sheets, expected_name, keywords, exclude_keywords=None):
     """Find a sheet name using flexible matching."""
@@ -148,9 +143,9 @@ def find_sheet_name(available_sheets, expected_name, keywords, exclude_keywords=
         if norm == target:
             return original
 
-    target_stripped = target.replace(" ","")
+    target_stripped = target.replace(" ", "")
     for original, norm in normalized.items():
-        if norm.replace(" ","") == target_stripped:
+        if norm.replace(" ", "") == target_stripped:
             return original
 
     for original, norm in normalized.items():
@@ -160,7 +155,6 @@ def find_sheet_name(available_sheets, expected_name, keywords, exclude_keywords=
             return original
 
     return None
-
 
 def load_data(filepath):
     """Load 3 sheets with auto-detection of header rows and flexible sheet names."""
@@ -282,7 +276,6 @@ def load_data(filepath):
 
     return df_start, df_end, df_worklog
 
-
 def calc_capacity_utilization(df_worklog, capacity_hours):
     """Capacity Utilization = Σ Hours worklog / Capacity équipe × 100."""
     hours_col = find_column(df_worklog, ["Hours", "hours", "Time Spent", "Time spent", "Heures", "HOURS"])
@@ -298,7 +291,6 @@ def calc_capacity_utilization(df_worklog, capacity_hours):
     utilization = round((total_logged / capacity_hours) * 100, 2)
     return utilization, total_logged
 
-
 def calc_throughput(df_end, key_col):
     """Throughput = COUNT tickets where Resolved is not null."""
     resolved_col = find_column(df_end, ["Resolved", "resolved", "Resolution Date", "RESOLVED"])
@@ -306,7 +298,7 @@ def calc_throughput(df_end, key_col):
     if resolved_col is None:
         res_col = find_column(df_end, ["Resolution", "resolution", "RESOLUTION"])
         if res_col:
-            resolved = df_end[df_end[res_col].notna() & (df_end[res_col].astype(str).str.strip() != "")]
+            resolved = df_end[df_end[res_col].notna() & (df_end[res_col].astype(str).str.strip() != "")]  
             return len(resolved), resolved[[key_col]].copy()
 
         print(f"⚠️  Colonne 'Resolved' introuvable dans End Sprint.")
@@ -315,13 +307,12 @@ def calc_throughput(df_end, key_col):
     resolved = df_end[df_end[resolved_col].notna()]
     return len(resolved), resolved[[key_col]].copy()
 
-
 def calc_unplanned(df_start, df_end, key_col_start, key_col_end):
     """Unplanned = tickets in End Sprint but NOT in Start."""
     start_keys = set(df_start[key_col_start].dropna().astype(str).str.strip().unique())
     end_keys = set(df_end[key_col_end].dropna().astype(str).str.strip().unique())
     unplanned_keys = end_keys - start_keys
-    unplanned_df = df_end[df_end[key_col_end].astype(str).strip().isin(unplanned_keys)]
+    unplanned_df = df_end[df_end[key_col_end].astype(str).str.strip().isin(unplanned_keys)]
 
     detail_cols = [key_col_end]
     for col in ["Summary", "Status", "Assignee", "Issue Type", "Priority"]:
@@ -329,7 +320,6 @@ def calc_unplanned(df_start, df_end, key_col_start, key_col_end):
             detail_cols.append(col)
 
     return len(unplanned_keys), unplanned_df[detail_cols].copy()
-
 
 def calc_wip_end_sprint(df_end, key_col):
     """WIP = tickets where Status NOT IN done statuses."""
@@ -349,13 +339,11 @@ def calc_wip_end_sprint(df_end, key_col):
 
     return len(wip), wip[detail_cols].copy()
 
-
 def calc_support_load(unplanned_count, throughput):
     """Support Load = Unplanned / Throughput × 100."""
     if throughput == 0:
         return None
     return round((unplanned_count / throughput) * 100, 2)
-
 
 def find_no_estimation(df_end, key_col):
     """Tickets without Original Estimate."""
@@ -379,7 +367,6 @@ def find_no_estimation(df_end, key_col):
 
     return len(no_est), no_est[detail_cols].copy()
 
-
 def find_no_tempo(df_end, df_worklog, key_col_end):
     """Tickets in End Sprint with no worklog entry."""
     wl_key_col = find_key_column(df_worklog, SHEET_WORKLOG)
@@ -395,7 +382,6 @@ def find_no_tempo(df_end, df_worklog, key_col_end):
             detail_cols.append(col)
 
     return len(no_tempo_keys), no_tempo_df[detail_cols].copy()
-
 
 def get_capacity_input():
     """Prompt user for team capacity in hours."""
