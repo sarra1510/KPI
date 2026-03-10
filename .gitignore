@@ -11,3 +11,4 @@ build/
 venv/
 *.xlsx
 !sprint_data.xlsx
+uploads/

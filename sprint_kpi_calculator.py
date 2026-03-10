@@ -374,7 +374,7 @@ def find_no_tempo(df_end, df_worklog, key_col_end):
     end_keys = set(df_end[key_col_end].dropna().astype(str).str.strip().unique())
     no_tempo_keys = end_keys - worklog_keys
 
-    no_tempo_df = df_end[df_end[key_col_end].astype(str).strip().isin(no_tempo_keys)]
+    no_tempo_df = df_end[df_end[key_col_end].astype(str).str.strip().isin(no_tempo_keys)]
 
     detail_cols = [key_col_end]
     for col in ["Summary", "Assignee", "Status"]:

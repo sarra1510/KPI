@@ -109,11 +109,40 @@ Le script génère automatiquement un fichier `*_KPI_Report.xlsx` avec les ongle
 
 ---
 
+---
+
+## Interface Web
+
+Une interface web permet d'uploader le fichier Excel, de saisir la capacité équipe et de visualiser le dashboard KPI directement dans le navigateur.
+
+### Lancer l'interface web
+
+```bash
+pip install -r requirements.txt
+python app.py
+```
+
+Ouvrez ensuite [http://localhost:5000](http://localhost:5000) dans votre navigateur.
+
+### Fonctionnalités
+
+1. **Drag & drop** — Glissez-déposez votre fichier Excel ou cliquez pour le sélectionner
+2. **Saisie capacité** — Entrez les heures de capacité de l'équipe
+3. **Dashboard KPI** — 8 cartes visuelles avec codes couleurs (vert / orange / rouge)
+4. **Tableaux détaillés** — Listes des tickets Unplanned, WIP, Sans Estimation, Sans Tempo
+5. **Téléchargement** — Export du rapport Excel en un clic
+
+---
+
 ## Structure du projet
 
 ```
 KPI/
-├── sprint_kpi_calculator.py   # Script principal
+├── sprint_kpi_calculator.py   # Moteur de calcul (CLI + web)
+├── app.py                     # Interface web Flask
+├── templates/
+│   ├── index.html             # Formulaire d'upload
+│   └── results.html           # Dashboard KPI
 ├── requirements.txt           # Dépendances Python
 └── README.md                  # Documentation
 ```
