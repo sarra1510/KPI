@@ -385,72 +385,85 @@ def find_no_tempo(df_end, df_worklog, key_col_end):
 
     return len(no_tempo_keys), no_tempo_df[detail_cols].copy()
 
-def calc_resolution_time(df_end, key_col):
-    """Calculate resolution time (in days) for resolved tickets.
+def calc_resolution_time(df_end, df_worklog, key_col_end):
+    """Calculate resolution time (in days) using first Tempo worklog date as start.
+
+    Resolution Time = Resolved - MIN(Work date) per ticket from Tempo worklogs.
+    This avoids counting backlog time and measures actual work effort.
 
     Returns:
         avg_resolution_days (float | None): average resolution time rounded to 2 decimals.
-        resolution_details (DataFrame): Key, Summary, Status, Created, Resolved, Resolution Time (j).
+        resolution_details (DataFrame): Key, Summary, Status, Assignee,
+            Début réel (1er worklog), Date résolution, Temps de résolution (j).
     """
-    created_col = find_column(df_end, ["Created", "created", "Date de création", "CREATED"])
     resolved_col = find_column(df_end, ["Resolved", "resolved", "Resolution Date", "RESOLVED"])
-    status_col = find_column(df_end, ["Status", "status", "STATUS"])
-
-    if created_col is None or resolved_col is None:
+    if resolved_col is None:
         return None, pd.DataFrame()
 
-    df = df_end.copy()
-
-    # Consider a ticket resolved if its Resolved column is not null
-    # OR if its status is in DONE_STATUSES
-    resolved_mask = df[resolved_col].notna()
-    if status_col:
-        done_mask = df[status_col].astype(str).str.strip().str.lower().isin(DONE_STATUSES)
-        resolved_mask = resolved_mask | done_mask
-
-    df_resolved = df[resolved_mask].copy()
-
-    # Keep only rows where both Created and Resolved dates exist
-    df_resolved = df_resolved[df_resolved[created_col].notna() & df_resolved[resolved_col].notna()].copy()
-
-    if df_resolved.empty:
+    work_date_col = find_column(df_worklog, ["Work date", "work date", "Work Date", "WORK DATE", "Date"])
+    if work_date_col is None:
         return None, pd.DataFrame()
 
-    df_resolved[created_col] = pd.to_datetime(df_resolved[created_col], errors="coerce")
-    df_resolved[resolved_col] = pd.to_datetime(df_resolved[resolved_col], errors="coerce")
-
-    df_resolved = df_resolved.dropna(subset=[created_col, resolved_col])
-
-    if df_resolved.empty:
+    wl_key_col = find_column(df_worklog, ["Issue Key", "Issue key", "issue key", "Key", "key"])
+    if wl_key_col is None:
         return None, pd.DataFrame()
 
-    df_resolved["Resolution Time (j)"] = (
-        (df_resolved[resolved_col] - df_resolved[created_col]).dt.total_seconds() / 86400
+    # Convert dates
+    df_worklog = df_worklog.copy()
+    df_worklog[work_date_col] = pd.to_datetime(df_worklog[work_date_col], errors="coerce")
+    df_end = df_end.copy()
+    df_end[resolved_col] = pd.to_datetime(df_end[resolved_col], errors="coerce")
+
+    # Get MIN(Work date) per Issue Key from worklogs
+    first_work = df_worklog.groupby(wl_key_col)[work_date_col].min().reset_index()
+    first_work.columns = ["_join_key", "_first_work_date"]
+
+    # Get resolved tickets from End Sprint
+    resolved_df = df_end[df_end[resolved_col].notna()].copy()
+    resolved_df["_join_key"] = resolved_df[key_col_end].astype(str).str.strip()
+    first_work["_join_key"] = first_work["_join_key"].astype(str).str.strip()
+
+    # Join on Issue Key
+    merged = resolved_df.merge(first_work, on="_join_key", how="inner")
+
+    if merged.empty:
+        return None, pd.DataFrame()
+
+    # Calculate resolution time in days
+    merged["Temps de résolution (j)"] = (
+        (merged[resolved_col] - merged["_first_work_date"]).dt.total_seconds() / 86400
     ).round(2)
 
-    avg_resolution_days = round(df_resolved["Resolution Time (j)"].mean(), 2)
-    if pd.isna(avg_resolution_days):
+    # Filter out negative values (data quality issues)
+    merged = merged[merged["Temps de résolution (j)"] >= 0]
+
+    if merged.empty:
         return None, pd.DataFrame()
 
-    detail_cols = [key_col]
-    for col in ["Summary", status_col, created_col, resolved_col]:
-        if col and col in df_resolved.columns and col not in detail_cols:
+    avg_days = round(merged["Temps de résolution (j)"].mean(), 2)
+    if pd.isna(avg_days):
+        return None, pd.DataFrame()
+
+    # Build detail DataFrame
+    detail_cols = [key_col_end]
+    for col in ["Summary", "Status", "Assignee"]:
+        if col in merged.columns:
             detail_cols.append(col)
-    detail_cols.append("Resolution Time (j)")
 
-    resolution_details = df_resolved[detail_cols].copy()
-    # Rename columns to standard names for display
-    rename_map = {}
-    if created_col != "Created":
-        rename_map[created_col] = "Created"
-    if resolved_col != "Resolved":
-        rename_map[resolved_col] = "Resolved"
-    if status_col and status_col != "Status":
-        rename_map[status_col] = "Status"
-    if rename_map:
-        resolution_details = resolution_details.rename(columns=rename_map)
+    detail = merged[detail_cols + ["_first_work_date", resolved_col, "Temps de résolution (j)"]].copy()
+    detail = detail.rename(columns={
+        "_first_work_date": "Début réel (1er worklog)",
+        resolved_col: "Date résolution",
+    })
 
-    return avg_resolution_days, resolution_details
+    # Format dates for display
+    for date_col in ["Début réel (1er worklog)", "Date résolution"]:
+        if date_col in detail.columns:
+            detail[date_col] = detail[date_col].dt.strftime("%Y-%m-%d").fillna("")
+
+    detail = detail.sort_values("Temps de résolution (j)", ascending=False).reset_index(drop=True)
+
+    return avg_days, detail
 
 
 def calc_time_per_project(df_worklog):
