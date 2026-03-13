@@ -207,18 +207,18 @@
     <div class="col-12 col-md-3 col-lg-2">
       <div class="nx-sidebar">
         <div class="nx-sidebar-title">Navigation</div>
-        <button class="nx-nav-item active" data-section="overview" title="Vue d'ensemble">📊 Vue d'ensemble</button>
+        <button class="nx-nav-item active" data-section="overview">📊 Vue d'ensemble</button>
         {% if wip_rows %}
-        <button class="nx-nav-item" data-section="wip" title="WIP End Sprint">🔄 WIP End Sprint</button>
+        <button class="nx-nav-item" data-section="wip">🔄 WIP End Sprint</button>
         {% endif %}
         {% if no_est_rows %}
-        <button class="nx-nav-item" data-section="noest" title="Sans estimation">⚠️ Sans estimation</button>
+        <button class="nx-nav-item" data-section="noest">⚠️ Sans estimation</button>
         {% endif %}
         {% if no_tempo_rows %}
-        <button class="nx-nav-item" data-section="notempo" title="Sans tempo">⏱️ Sans tempo</button>
+        <button class="nx-nav-item" data-section="notempo">⏱️ Sans tempo</button>
         {% endif %}
         {% if resolution_rows %}
-        <button class="nx-nav-item" data-section="resolution" title="Temps de résolution">⏳ Temps de résolution</button>
+        <button class="nx-nav-item" data-section="resolution">⏳ Temps de résolution</button>
         {% endif %}
       </div>
     </div>
@@ -526,23 +526,35 @@
   });
 
   // ── Sidebar navigation ──
-  document.querySelectorAll('.nx-nav-item').forEach(function (btn) {
-    btn.addEventListener('click', function () {
-      // Update active state
-      document.querySelectorAll('.nx-nav-item').forEach(function (b) { b.classList.remove('active'); });
-      btn.classList.add('active');
+  (function() {
+    var navButtons = document.querySelectorAll('.nx-nav-item');
+    var sections = document.querySelectorAll('.nx-section');
 
-      // Show matching section, hide others
-      var target = btn.dataset.section;
-      document.querySelectorAll('.nx-section').forEach(function (sec) {
-        if (sec.id === 'section-' + target) {
-          sec.classList.remove('d-none');
-        } else {
-          sec.classList.add('d-none');
-        }
+    navButtons.forEach(function(btn) {
+      btn.addEventListener('click', function(e) {
+        e.preventDefault();
+        e.stopPropagation();
+
+        // Update active state on all nav buttons
+        navButtons.forEach(function(b) {
+          b.classList.remove('active');
+        });
+        this.classList.add('active');
+
+        // Get target section name
+        var targetSection = this.getAttribute('data-section');
+
+        // Hide all sections, show the target
+        sections.forEach(function(sec) {
+          if (sec.id === 'section-' + targetSection) {
+            sec.classList.remove('d-none');
+          } else {
+            sec.classList.add('d-none');
+          }
+        });
       });
     });
-  });
+  })();
 
   // ── Client-side pagination ──
   var PAGE_SIZE = 10;
