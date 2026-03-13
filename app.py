@@ -312,7 +312,7 @@ def calculate():
         "capacity_hours": capacity_hours,
         "total_logged": total_logged,
         "total_logged_days": total_logged_days,
-        "capacity_util": min(capacity_util, 100),
+        "capacity_util": capacity_util,
         "throughput": throughput,
         "unplanned_count": unplanned_count,
         "wip_count": wip_count,
