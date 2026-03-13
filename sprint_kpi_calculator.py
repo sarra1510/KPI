@@ -385,6 +385,108 @@ def find_no_tempo(df_end, df_worklog, key_col_end):
 
     return len(no_tempo_keys), no_tempo_df[detail_cols].copy()
 
+def calc_resolution_time(df_end, key_col):
+    """Calculate resolution time (in days) for resolved tickets.
+
+    Returns:
+        avg_resolution_days (float | None): average resolution time rounded to 2 decimals.
+        resolution_details (DataFrame): Key, Summary, Status, Created, Resolved, Resolution Time (j).
+    """
+    created_col = find_column(df_end, ["Created", "created", "Date de création", "CREATED"])
+    resolved_col = find_column(df_end, ["Resolved", "resolved", "Resolution Date", "RESOLVED"])
+    status_col = find_column(df_end, ["Status", "status", "STATUS"])
+
+    if created_col is None or resolved_col is None:
+        return None, pd.DataFrame()
+
+    df = df_end.copy()
+
+    # Consider a ticket resolved if its Resolved column is not null
+    # OR if its status is in DONE_STATUSES
+    resolved_mask = df[resolved_col].notna()
+    if status_col:
+        done_mask = df[status_col].astype(str).str.strip().str.lower().isin(DONE_STATUSES)
+        resolved_mask = resolved_mask | done_mask
+
+    df_resolved = df[resolved_mask].copy()
+
+    # Keep only rows where both Created and Resolved dates exist
+    df_resolved = df_resolved[df_resolved[created_col].notna() & df_resolved[resolved_col].notna()].copy()
+
+    if df_resolved.empty:
+        return None, pd.DataFrame()
+
+    df_resolved[created_col] = pd.to_datetime(df_resolved[created_col], errors="coerce")
+    df_resolved[resolved_col] = pd.to_datetime(df_resolved[resolved_col], errors="coerce")
+
+    df_resolved = df_resolved.dropna(subset=[created_col, resolved_col])
+
+    if df_resolved.empty:
+        return None, pd.DataFrame()
+
+    df_resolved["Resolution Time (j)"] = (
+        (df_resolved[resolved_col] - df_resolved[created_col]).dt.total_seconds() / 86400
+    ).round(2)
+
+    avg_resolution_days = round(df_resolved["Resolution Time (j)"].mean(), 2)
+    if pd.isna(avg_resolution_days):
+        return None, pd.DataFrame()
+
+    detail_cols = [key_col]
+    for col in ["Summary", status_col, created_col, resolved_col]:
+        if col and col in df_resolved.columns and col not in detail_cols:
+            detail_cols.append(col)
+    detail_cols.append("Resolution Time (j)")
+
+    resolution_details = df_resolved[detail_cols].copy()
+    # Rename columns to standard names for display
+    rename_map = {}
+    if created_col != "Created":
+        rename_map[created_col] = "Created"
+    if resolved_col != "Resolved":
+        rename_map[resolved_col] = "Resolved"
+    if status_col and status_col != "Status":
+        rename_map[status_col] = "Status"
+    if rename_map:
+        resolution_details = resolution_details.rename(columns=rename_map)
+
+    return avg_resolution_days, resolution_details
+
+
+def calc_time_per_project(df_worklog):
+    """Break down total logged hours by project (derived from the Issue Key prefix).
+
+    Returns:
+        DataFrame with columns: Projet, Heures, Jours, % du total — sorted by Jours descending.
+    """
+    key_col = find_column(df_worklog, [
+        "Issue Key", "Issue key", "issue key", "ISSUE KEY",
+        "Key", "key", "KEY",
+    ])
+    hours_col = find_column(df_worklog, [
+        "Hours", "hours", "Time Spent", "Time spent", "Heures", "HOURS",
+    ])
+
+    if key_col is None or hours_col is None:
+        return pd.DataFrame()
+
+    df = df_worklog[[key_col, hours_col]].copy()
+    df[hours_col] = pd.to_numeric(df[hours_col], errors="coerce").fillna(0)
+    df["Projet"] = df[key_col].astype(str).str.extract(r"^([A-Z][A-Z0-9]*)-", expand=False)
+    df = df.dropna(subset=["Projet"])
+
+    grouped = df.groupby("Projet")[hours_col].sum().reset_index()
+    grouped.columns = ["Projet", "Heures"]
+    total_hours = grouped["Heures"].sum()
+    grouped["Jours"] = (grouped["Heures"] / HOURS_PER_DAY).round(2)
+    grouped["% du total"] = (
+        (grouped["Heures"] / total_hours * 100).round(1) if total_hours > 0 else 0
+    )
+    grouped = grouped.sort_values("Jours", ascending=False).reset_index(drop=True)
+
+    return grouped
+
+
 def get_capacity_input():
     """Prompt user for team capacity in days (converted to hours internally)."""
     while True:

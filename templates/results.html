@@ -251,7 +251,67 @@
       </div>
     </div>
 
+    <!-- Temps moyen de résolution -->
+    {% if kpis.avg_resolution_days is not none %}
+    <div class="col-6 col-md-4 col-lg-3">
+      <div class="kpi-card card p-3 text-center">
+        <div class="kpi-icon">⏳</div>
+        <div class="kpi-value
+          {% if kpis.avg_resolution_days <= 5 %}color-green
+          {% elif kpis.avg_resolution_days <= 15 %}color-yellow
+          {% else %}color-red{% endif %}">
+          {{ kpis.avg_resolution_days }}j
+        </div>
+        <div class="kpi-label">TEMPS MOYEN DE RÉSOLUTION</div>
+      </div>
+    </div>
+    {% endif %}
+
   </div>
+
+  <!-- Temps passé par projet -->
+  {% if project_rows %}
+  <div class="section-card card mb-4">
+    <div class="card-header d-flex align-items-center gap-2" data-bs-toggle="collapse" data-bs-target="#tbl-projects" aria-expanded="true">
+      <span class="chevron">▼</span>
+      📂 Temps passé par projet
+      <span class="badge ms-1 badge-count" style="background:var(--nx-teal);">{{ project_rows | length }}</span>
+    </div>
+    <div id="tbl-projects" class="collapse show">
+      <div class="card-body p-0">
+        <div class="table-responsive">
+          <table class="table table-sm table-hover mb-0">
+            <thead>
+              <tr>
+                <th>Projet</th>
+                <th>Heures</th>
+                <th>Jours</th>
+                <th>% du total</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for row in project_rows %}
+              <tr>
+                <td><strong>{{ row.Projet }}</strong></td>
+                <td>{{ row.Heures }}</td>
+                <td>{{ row.Jours }}</td>
+                <td>
+                  <div class="d-flex align-items-center gap-2">
+                    <div class="progress flex-grow-1" style="height:6px;">
+                      <div class="progress-bar" role="progressbar" aria-valuenow="{{ row['% du total'] }}" aria-valuemin="0" aria-valuemax="100" style="width:{{ row['% du total'] }}%; background:var(--nx-teal);"></div>
+                    </div>
+                    <span style="min-width:3rem; text-align:right;">{{ row['% du total'] }}%</span>
+                  </div>
+                </td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+  {% endif %}
 
   <!-- Detail tables (accordion / collapsible) -->
 
@@ -386,6 +446,40 @@
       </div>
     </div>
     {% endif %}
+
+  {% if resolution_rows %}
+  <div class="section-card card mb-3">
+    <div class="card-header d-flex align-items-center gap-2" data-bs-toggle="collapse" data-bs-target="#tbl-resolution" aria-expanded="false">
+      <span class="chevron collapsed">▼</span>
+      ⏳ Temps de résolution par ticket
+      <span class="badge ms-1 badge-count" style="background:var(--nx-teal);">{{ resolution_rows | length }}</span>
+    </div>
+    <div id="tbl-resolution" class="collapse">
+      <div class="card-body p-0">
+        <div class="table-responsive">
+          <table class="table table-sm table-hover mb-0">
+            <thead>
+              <tr>
+                {% for col in resolution_rows[0].keys() %}
+                <th>{{ col }}</th>
+                {% endfor %}
+              </tr>
+            </thead>
+            <tbody>
+              {% for row in resolution_rows %}
+              <tr>
+                {% for val in row.values() %}
+                <td>{{ val }}</td>
+                {% endfor %}
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+  {% endif %}
 
   </div>
 
