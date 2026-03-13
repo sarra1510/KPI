@@ -252,7 +252,7 @@ def calculate():
         no_est_count, no_est_details = find_no_estimation(df_end, key_col_end)
         no_tempo_count, no_tempo_details = find_no_tempo(df_end, df_worklog, key_col_end)
         avg_resolution_days, resolution_details = calc_resolution_time(df_end, df_worklog, key_col_end)
-        project_time_df = calc_time_per_project(df_worklog, df_end, key_col_end)
+        project_totals_df, project_by_priority_df = calc_time_per_project(df_worklog, df_end, key_col_end)
 
     except ValueError as e:
         flash(str(e), "danger")
@@ -302,8 +302,10 @@ def calculate():
             no_tempo_details.to_excel(writer, sheet_name="Sans Tempo", index=False)
         if not resolution_details.empty:
             resolution_details.to_excel(writer, sheet_name="Temps de résolution", index=False)
-        if not project_time_df.empty:
-            project_time_df.to_excel(writer, sheet_name="Temps par projet", index=False)
+        if not project_totals_df.empty:
+            project_totals_df.to_excel(writer, sheet_name="Temps par projet", index=False)
+        if not project_by_priority_df.empty:
+            project_by_priority_df.to_excel(writer, sheet_name="Temps par projet-priorité", index=False)
 
     kpis = {
         "capacity_days": capacity_days,
@@ -333,7 +335,8 @@ def calculate():
         no_est_rows=df_to_records(no_est_details),
         no_tempo_rows=df_to_records(no_tempo_details),
         resolution_rows=df_to_records(resolution_details),
-        project_rows=df_to_records(project_time_df),
+        project_totals_rows=df_to_records(project_totals_df),
+        project_priority_rows=df_to_records(project_by_priority_df),
         report_filename=report_filename,
     )
 

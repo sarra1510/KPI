@@ -145,6 +145,27 @@
     .table td { font-size: .87rem; vertical-align: middle; }
     .badge-count { font-size: .88rem; font-weight: 700; }
 
+    /* ── Priority indicators ── */
+    .priority-indicator {
+      display: inline-block;
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      margin-right: 6px;
+      vertical-align: middle;
+    }
+    .priority-blocker { background: #dc2626; } /* Red */
+    .priority-critical { background: #ea580c; } /* Orange */
+    .priority-high { background: #f97316; } /* Light orange */
+    .priority-medium { background: #eab308; } /* Yellow */
+    .priority-low { background: #22c55e; } /* Green */
+    .priority-minor { background: #22c55e; } /* Green */
+    .priority-trivial { background: #22c55e; } /* Green */
+    .priority-unknown { background: #9ca3af; } /* Gray */
+
+    /* ── Key column no-wrap ── */
+    .key-nowrap { white-space: nowrap; }
+
     /* ── Pagination ── */
     .nx-pagination { display: flex; align-items: center; gap: .5rem; padding: .75rem 1rem; font-size: .85rem; }
     .nx-pagination .page-info { color: #6b7280; }
@@ -328,30 +349,89 @@
 
         </div><!-- /row g-3 -->
 
-        <!-- Temps passé par projet -->
-        {% if project_rows %}
+        <!-- Temps passé par projet (totaux) -->
+        {% if project_totals_rows %}
         <div class="section-card card mb-4">
-          <div class="card-header d-flex align-items-center gap-2" data-bs-toggle="collapse" data-bs-target="#tbl-projects" aria-expanded="true">
+          <div class="card-header d-flex align-items-center gap-2" data-bs-toggle="collapse" data-bs-target="#tbl-projects-totals" aria-expanded="true">
             <span class="chevron">▼</span>
-            📂 Temps passé par projet
-            <span class="badge ms-1 badge-count" style="background:var(--nx-teal);">{{ project_rows | length }}</span>
+            📂 Temps passé par projet (totaux)
+            <span class="badge ms-1 badge-count" style="background:var(--nx-teal);">{{ project_totals_rows | length }}</span>
           </div>
-          <div id="tbl-projects" class="collapse show">
+          <div id="tbl-projects-totals" class="collapse show">
             <div class="card-body p-0">
               <div class="table-responsive">
                 <table class="table table-sm table-hover mb-0">
                   <thead>
                     <tr>
-                      {% for col in project_rows[0].keys() %}
+                      {% for col in project_totals_rows[0].keys() %}
                       <th>{{ col }}</th>
                       {% endfor %}
                     </tr>
                   </thead>
                   <tbody>
-                    {% for row in project_rows %}
+                    {% for row in project_totals_rows %}
                     <tr>
-                      {% for val in row.values() %}
-                      <td>{{ val }}</td>
+                      {% for key, val in row.items() %}
+                      <td{% if 'Key' in key or 'Clé' in key or key == 'Projet' %} class="key-nowrap"{% endif %}>{{ val }}</td>
+                      {% endfor %}
+                    </tr>
+                    {% endfor %}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </div>
+        {% endif %}
+
+        <!-- Temps passé par projet et priorité -->
+        {% if project_priority_rows %}
+        <div class="section-card card mb-4">
+          <div class="card-header d-flex align-items-center gap-2" data-bs-toggle="collapse" data-bs-target="#tbl-projects-priority" aria-expanded="true">
+            <span class="chevron">▼</span>
+            📊 Temps passé par projet et priorité
+            <span class="badge ms-1 badge-count" style="background:var(--nx-teal);">{{ project_priority_rows | length }}</span>
+          </div>
+          <div id="tbl-projects-priority" class="collapse show">
+            <div class="card-body p-0">
+              <div class="table-responsive">
+                <table class="table table-sm table-hover mb-0">
+                  <thead>
+                    <tr>
+                      {% for col in project_priority_rows[0].keys() %}
+                      <th>{{ col }}</th>
+                      {% endfor %}
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {% for row in project_priority_rows %}
+                    <tr>
+                      {% for key, val in row.items() %}
+                      <td{% if 'Key' in key or 'Clé' in key or key == 'Projet' %} class="key-nowrap"{% endif %}>
+                        {% if key == 'Priorité' %}
+                          {% set prio_lower = val|lower %}
+                          {% if prio_lower == 'blocker' %}
+                            <span class="priority-indicator priority-blocker" title="Blocker"></span>
+                          {% elif prio_lower == 'critical' %}
+                            <span class="priority-indicator priority-critical" title="Critical"></span>
+                          {% elif prio_lower == 'high' %}
+                            <span class="priority-indicator priority-high" title="High"></span>
+                          {% elif prio_lower == 'medium' %}
+                            <span class="priority-indicator priority-medium" title="Medium"></span>
+                          {% elif prio_lower == 'low' %}
+                            <span class="priority-indicator priority-low" title="Low"></span>
+                          {% elif prio_lower == 'minor' %}
+                            <span class="priority-indicator priority-minor" title="Minor"></span>
+                          {% elif prio_lower == 'trivial' %}
+                            <span class="priority-indicator priority-trivial" title="Trivial"></span>
+                          {% else %}
+                            <span class="priority-indicator priority-unknown" title="Unknown"></span>
+                          {% endif %}
+                          {{ val }}
+                        {% else %}
+                          {{ val }}
+                        {% endif %}
+                      </td>
                       {% endfor %}
                     </tr>
                     {% endfor %}
@@ -386,8 +466,8 @@
                 <tbody>
                   {% for row in wip_rows %}
                   <tr>
-                    {% for val in row.values() %}
-                    <td>{{ val }}</td>
+                    {% for key, val in row.items() %}
+                    <td{% if 'Key' in key or 'Clé' in key %} class="key-nowrap"{% endif %}>{{ val }}</td>
                     {% endfor %}
                   </tr>
                   {% endfor %}
@@ -421,8 +501,8 @@
                 <tbody>
                   {% for row in no_est_rows %}
                   <tr>
-                    {% for val in row.values() %}
-                    <td>{{ val }}</td>
+                    {% for key, val in row.items() %}
+                    <td{% if 'Key' in key or 'Clé' in key %} class="key-nowrap"{% endif %}>{{ val }}</td>
                     {% endfor %}
                   </tr>
                   {% endfor %}
@@ -456,8 +536,8 @@
                 <tbody>
                   {% for row in no_tempo_rows %}
                   <tr>
-                    {% for val in row.values() %}
-                    <td>{{ val }}</td>
+                    {% for key, val in row.items() %}
+                    <td{% if 'Key' in key or 'Clé' in key %} class="key-nowrap"{% endif %}>{{ val }}</td>
                     {% endfor %}
                   </tr>
                   {% endfor %}
@@ -491,8 +571,8 @@
                 <tbody>
                   {% for row in resolution_rows %}
                   <tr>
-                    {% for val in row.values() %}
-                    <td>{{ val }}</td>
+                    {% for key, val in row.items() %}
+                    <td{% if 'Key' in key or 'Clé' in key %} class="key-nowrap"{% endif %}>{{ val }}</td>
                     {% endfor %}
                   </tr>
                   {% endfor %}
