@@ -31,6 +31,8 @@ from sprint_kpi_calculator import (
     calc_support_load,
     find_no_estimation,
     find_no_tempo,
+    calc_resolution_time,
+    calc_time_per_project,
     SHEET_START,
     SHEET_END,
     SHEET_WORKLOG,
@@ -255,6 +257,8 @@ def calculate():
         support_load = calc_support_load(unplanned_count, throughput)
         no_est_count, no_est_details = find_no_estimation(df_end, key_col_end)
         no_tempo_count, no_tempo_details = find_no_tempo(df_end, df_worklog, key_col_end)
+        avg_resolution_days, resolution_details = calc_resolution_time(df_end, key_col_end)
+        project_time_df = calc_time_per_project(df_worklog)
 
     except ValueError as e:
         flash(str(e), "danger")
@@ -281,6 +285,7 @@ def calculate():
                 "Support Load (%)",
                 "Tickets sans estimation",
                 "Tickets sans tempo",
+                "Temps moyen de résolution (j)",
             ],
             "Valeur": [
                 capacity_days,
@@ -292,6 +297,7 @@ def calculate():
                 support_load if support_load is not None else "N/A",
                 no_est_count,
                 no_tempo_count,
+                avg_resolution_days if avg_resolution_days is not None else "N/A",
             ],
         }
     )
@@ -306,6 +312,10 @@ def calculate():
             no_est_details.to_excel(writer, sheet_name="Sans Estimation", index=False)
         if not no_tempo_details.empty:
             no_tempo_details.to_excel(writer, sheet_name="Sans Tempo", index=False)
+        if not resolution_details.empty:
+            resolution_details.to_excel(writer, sheet_name="Temps de résolution", index=False)
+        if not project_time_df.empty:
+            project_time_df.to_excel(writer, sheet_name="Temps par projet", index=False)
 
     kpis = {
         "capacity_days": capacity_days,
@@ -319,6 +329,7 @@ def calculate():
         "support_load": support_load,
         "no_est_count": no_est_count,
         "no_tempo_count": no_tempo_count,
+        "avg_resolution_days": avg_resolution_days,
     }
 
     # Save to upload history
@@ -336,6 +347,8 @@ def calculate():
         wip_rows=df_to_records(wip_details),
         no_est_rows=df_to_records(no_est_details),
         no_tempo_rows=df_to_records(no_tempo_details),
+        resolution_rows=df_to_records(resolution_details),
+        project_rows=df_to_records(project_time_df),
         report_filename=report_filename,
     )
 
