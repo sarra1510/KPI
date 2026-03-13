@@ -229,6 +229,9 @@
       <div class="nx-sidebar">
         <div class="nx-sidebar-title">Navigation</div>
         <a href="javascript:void(0)" class="nx-nav-item active" onclick="nxNav('overview', this)">📊 Vue d'ensemble</a>
+        {% if resolution_rows %}
+        <a href="javascript:void(0)" class="nx-nav-item" onclick="nxNav('resolution', this)">⏳ Temps de résolution</a>
+        {% endif %}
         {% if wip_rows %}
         <a href="javascript:void(0)" class="nx-nav-item" onclick="nxNav('wip', this)">🔄 WIP End Sprint</a>
         {% endif %}
@@ -237,9 +240,6 @@
         {% endif %}
         {% if no_tempo_rows %}
         <a href="javascript:void(0)" class="nx-nav-item" onclick="nxNav('notempo', this)">⏱️ Sans tempo</a>
-        {% endif %}
-        {% if resolution_rows %}
-        <a href="javascript:void(0)" class="nx-nav-item" onclick="nxNav('resolution', this)">⏳ Temps de résolution</a>
         {% endif %}
       </div>
     </div>
@@ -572,7 +572,31 @@
                   {% for row in resolution_rows %}
                   <tr>
                     {% for key, val in row.items() %}
-                    <td{% if 'Key' in key or 'Clé' in key %} class="key-nowrap"{% endif %}>{{ val }}</td>
+                    <td{% if 'Key' in key or 'Clé' in key %} class="key-nowrap"{% endif %}>
+                      {% if key == 'Priorité' %}
+                        {% set prio_lower = val|lower %}
+                        {% if prio_lower == 'blocker' %}
+                          <span class="priority-indicator priority-blocker" title="Blocker"></span>
+                        {% elif prio_lower == 'critical' %}
+                          <span class="priority-indicator priority-critical" title="Critical"></span>
+                        {% elif prio_lower == 'high' or prio_lower == 'highest' %}
+                          <span class="priority-indicator priority-high" title="High"></span>
+                        {% elif prio_lower == 'medium' %}
+                          <span class="priority-indicator priority-medium" title="Medium"></span>
+                        {% elif prio_lower == 'low' %}
+                          <span class="priority-indicator priority-low" title="Low"></span>
+                        {% elif prio_lower == 'minor' or prio_lower == 'lowest' %}
+                          <span class="priority-indicator priority-minor" title="Minor"></span>
+                        {% elif prio_lower == 'trivial' %}
+                          <span class="priority-indicator priority-trivial" title="Trivial"></span>
+                        {% else %}
+                          <span class="priority-indicator priority-unknown" title="Unknown"></span>
+                        {% endif %}
+                        {{ val }}
+                      {% else %}
+                        {{ val }}
+                      {% endif %}
+                    </td>
                     {% endfor %}
                   </tr>
                   {% endfor %}
