@@ -522,6 +522,7 @@ def calc_time_per_project(df_worklog, df_end=None, key_col_end=None):
     # 1. Calculate totals per project (no priority breakdown)
     totals = df.groupby("Projet")[hours_col].sum().reset_index()
     totals.columns = ["Projet", "Heures"]
+    totals["Heures"] = totals["Heures"].round(2)
     total_hours = totals["Heures"].sum()
     totals["Jours"] = (totals["Heures"] / HOURS_PER_DAY).round(2)
     totals["% du total"] = (
@@ -545,6 +546,7 @@ def calc_time_per_project(df_worklog, df_end=None, key_col_end=None):
 
         by_priority = df_with_prio.groupby(["Projet", "Priorité"])[hours_col].sum().reset_index()
         by_priority.columns = ["Projet", "Priorité", "Heures"]
+        by_priority["Heures"] = by_priority["Heures"].round(2)
         by_priority["Jours"] = (by_priority["Heures"] / HOURS_PER_DAY).round(2)
         by_priority["% du total"] = (
             (by_priority["Heures"] / total_hours * 100).round(2) if total_hours > 0 else 0
