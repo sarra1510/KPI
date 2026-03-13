@@ -156,7 +156,7 @@
     </div>
   </div>
 
-  <!-- KPI Cards grid (7 remaining KPIs) -->
+  <!-- KPI Cards grid -->
   <div class="row g-3 mb-4">
 
     <!-- Throughput -->
@@ -165,20 +165,6 @@
         <div class="kpi-icon">✅</div>
         <div class="kpi-value color-green">{{ kpis.throughput }}</div>
         <div class="kpi-label">THROUGHPUT (RÉSOLUS)</div>
-      </div>
-    </div>
-
-    <!-- Unplanned -->
-    <div class="col-6 col-md-4 col-lg-3">
-      <div class="kpi-card card p-3 text-center">
-        <div class="kpi-icon">🆕</div>
-        <div class="kpi-value
-          {% if kpis.unplanned_count == 0 %}color-green
-          {% elif kpis.unplanned_count <= 3 %}color-yellow
-          {% else %}color-red{% endif %}">
-          {{ kpis.unplanned_count }}
-        </div>
-        <div class="kpi-label">UNPLANNED TICKETS</div>
       </div>
     </div>
 
@@ -193,24 +179,6 @@
           {{ kpis.wip_count }}
         </div>
         <div class="kpi-label">WIP END SPRINT</div>
-      </div>
-    </div>
-
-    <!-- Support Load -->
-    <div class="col-6 col-md-4 col-lg-3">
-      <div class="kpi-card card p-3 text-center">
-        <div class="kpi-icon">🛟</div>
-        {% if kpis.support_load is not none %}
-          <div class="kpi-value
-            {% if kpis.support_load <= 20 %}color-green
-            {% elif kpis.support_load <= 40 %}color-yellow
-            {% else %}color-red{% endif %}">
-            {{ kpis.support_load }}%
-          </div>
-        {% else %}
-          <div class="kpi-value color-gray">N/A</div>
-        {% endif %}
-        <div class="kpi-label">SUPPORT LOAD</div>
       </div>
     </div>
 
@@ -254,39 +222,6 @@
   </div>
 
   <!-- Detail tables (accordion / collapsible) -->
-
-  {% if unplanned_rows %}
-  <div class="section-card card mb-3">
-    <div class="card-header d-flex align-items-center gap-2" data-bs-toggle="collapse" data-bs-target="#tbl-unplanned" aria-expanded="true">
-      <span class="chevron">▼</span>
-      🆕 Unplanned Tickets
-      <span class="badge ms-1 badge-count" style="background:var(--nx-teal);">{{ unplanned_rows | length }}</span>
-    </div>
-    <div id="tbl-unplanned" class="collapse show">
-      <div class="card-body p-0">
-        <div class="table-responsive">
-          <table class="table table-sm table-hover mb-0">
-            <thead>
-              <tr>
-                {% for col in unplanned_rows[0].keys() %}
-                <th>{{ col }}</th>
-                {% endfor %}
-              </tr>
-            </thead>
-            <tbody>
-              {% for row in unplanned_rows %}
-              <tr>
-                {% for val in row.values() %}
-                <td>{{ val }}</td>
-                {% endfor %}
-              </tr>
-              {% endfor %}
-            </tbody>
-          </table>
-        </div>
-      </div>
-    </div>
-    {% endif %}
 
   {% if wip_rows %}
   <div class="section-card card mb-3">
