@@ -207,18 +207,18 @@
     <div class="col-12 col-md-3 col-lg-2">
       <div class="nx-sidebar">
         <div class="nx-sidebar-title">Navigation</div>
-        <button class="nx-nav-item active" data-section="overview">📊 Vue d'ensemble</button>
+        <button type="button" class="nx-nav-item active" data-section="overview">📊 Vue d'ensemble</button>
         {% if wip_rows %}
-        <button class="nx-nav-item" data-section="wip">🔄 WIP End Sprint</button>
+        <button type="button" class="nx-nav-item" data-section="wip">🔄 WIP End Sprint</button>
         {% endif %}
         {% if no_est_rows %}
-        <button class="nx-nav-item" data-section="noest">⚠️ Sans estimation</button>
+        <button type="button" class="nx-nav-item" data-section="noest">⚠️ Sans estimation</button>
         {% endif %}
         {% if no_tempo_rows %}
-        <button class="nx-nav-item" data-section="notempo">⏱️ Sans tempo</button>
+        <button type="button" class="nx-nav-item" data-section="notempo">⏱️ Sans tempo</button>
         {% endif %}
         {% if resolution_rows %}
-        <button class="nx-nav-item" data-section="resolution">⏳ Temps de résolution</button>
+        <button type="button" class="nx-nav-item" data-section="resolution">⏳ Temps de résolution</button>
         {% endif %}
       </div>
     </div>
@@ -520,89 +520,94 @@
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-YvpcrYf0tY3lHB60NNkmXc4s9bIOgUxi8T/jzmq0oWnOFvYqbsGH5vxsVLXuLVrJ" crossorigin="anonymous"></script>
 <script>
-  // ── Bootstrap tooltips ──
-  document.querySelectorAll('[data-bs-toggle="tooltip"]').forEach(function (el) {
-    new bootstrap.Tooltip(el);
-  });
+  document.addEventListener('DOMContentLoaded', function() {
+    // ── Bootstrap tooltips ──
+    var tooltipEls = document.querySelectorAll('[data-bs-toggle="tooltip"]');
+    tooltipEls.forEach(function(el) {
+      new bootstrap.Tooltip(el);
+    });
 
-  // ── Sidebar navigation ──
-  (function() {
-    var navButtons = document.querySelectorAll('.nx-nav-item');
-    var sections = document.querySelectorAll('.nx-section');
+    // ── Sidebar navigation (event delegation) ──
+    var sidebar = document.querySelector('.nx-sidebar');
+    if (sidebar) {
+      sidebar.addEventListener('click', function(e) {
+        var btn = e.target.closest('.nx-nav-item');
+        if (!btn) return;
 
-    navButtons.forEach(function(btn) {
-      btn.addEventListener('click', function(e) {
         e.preventDefault();
         e.stopPropagation();
 
-        // Update active state on all nav buttons
-        navButtons.forEach(function(b) {
-          b.classList.remove('active');
-        });
-        this.classList.add('active');
+        var targetSection = btn.getAttribute('data-section');
+        console.log('[NAV] Clicked:', targetSection);
 
-        // Get target section name
-        var targetSection = this.getAttribute('data-section');
+        // Update active state
+        var allBtns = document.querySelectorAll('.nx-nav-item');
+        for (var i = 0; i < allBtns.length; i++) {
+          allBtns[i].classList.remove('active');
+        }
+        btn.classList.add('active');
 
-        // Hide all sections, show the target
-        sections.forEach(function(sec) {
+        // Show/hide sections
+        var allSections = document.querySelectorAll('.nx-section');
+        for (var j = 0; j < allSections.length; j++) {
+          var sec = allSections[j];
           if (sec.id === 'section-' + targetSection) {
             sec.classList.remove('d-none');
+            console.log('[NAV] Showing:', sec.id);
           } else {
             sec.classList.add('d-none');
           }
-        });
-      });
-    });
-  })();
-
-  // ── Client-side pagination ──
-  var PAGE_SIZE = 10;
-
-  function initPagination(tableId, pagId) {
-    var table = document.getElementById(tableId);
-    if (!table) return;
-    var rows = Array.from(table.querySelectorAll('tbody tr'));
-    if (rows.length <= PAGE_SIZE) return; // no pagination needed
-
-    var totalPages = Math.ceil(rows.length / PAGE_SIZE);
-    var currentPage = 1;
-
-    function renderPage(page) {
-      rows.forEach(function (row, i) {
-        row.style.display = (i >= (page - 1) * PAGE_SIZE && i < page * PAGE_SIZE) ? '' : 'none';
-      });
-      var pag = document.getElementById(pagId);
-      pag.innerHTML =
-        '<button class="btn btn-sm btn-outline-secondary" id="' + pagId + '-prev">◀ Précédent</button>' +
-        '<span class="page-info mx-2">Page ' + page + ' / ' + totalPages + '</span>' +
-        '<button class="btn btn-sm btn-outline-secondary" id="' + pagId + '-next">Suivant ▶</button>';
-      document.getElementById(pagId + '-prev').disabled = page === 1;
-      document.getElementById(pagId + '-prev').setAttribute('aria-disabled', page === 1 ? 'true' : 'false');
-      document.getElementById(pagId + '-next').disabled = page === totalPages;
-      document.getElementById(pagId + '-next').setAttribute('aria-disabled', page === totalPages ? 'true' : 'false');
-      document.getElementById(pagId + '-prev').addEventListener('click', function () {
-        if (currentPage > 1) { currentPage--; renderPage(currentPage); }
-      });
-      document.getElementById(pagId + '-next').addEventListener('click', function () {
-        if (currentPage < totalPages) { currentPage++; renderPage(currentPage); }
+        }
       });
     }
 
-    renderPage(currentPage);
-  }
+    // ── Client-side pagination ──
+    var PAGE_SIZE = 10;
 
-  initPagination('table-wip', 'pag-wip');
-  initPagination('table-noest', 'pag-noest');
-  initPagination('table-notempo', 'pag-notempo');
-  initPagination('table-resolution', 'pag-resolution');
+    function initPagination(tableId, pagId) {
+      var table = document.getElementById(tableId);
+      if (!table) return;
+      var rows = Array.from(table.querySelectorAll('tbody tr'));
+      if (rows.length <= PAGE_SIZE) return;
 
-  // ── Accordion chevron rotation ──
-  document.querySelectorAll('[data-bs-toggle="collapse"]').forEach(header => {
-    const target = document.querySelector(header.dataset.bsTarget);
-    if (!target) return;
-    target.addEventListener('show.bs.collapse', () => header.classList.remove('collapsed'));
-    target.addEventListener('hide.bs.collapse', () => header.classList.add('collapsed'));
+      var totalPages = Math.ceil(rows.length / PAGE_SIZE);
+      var currentPage = 1;
+
+      function renderPage(page) {
+        currentPage = page;
+        for (var i = 0; i < rows.length; i++) {
+          rows[i].style.display = (i >= (page - 1) * PAGE_SIZE && i < page * PAGE_SIZE) ? '' : 'none';
+        }
+        var pag = document.getElementById(pagId);
+        pag.innerHTML =
+          '<button type="button" class="btn btn-sm btn-outline-secondary" id="' + pagId + '-prev" aria-label="Page précédente">◀ Précédent</button>' +
+          '<span class="page-info mx-2">Page ' + page + ' / ' + totalPages + '</span>' +
+          '<button type="button" class="btn btn-sm btn-outline-secondary" id="' + pagId + '-next" aria-label="Page suivante">Suivant ▶</button>';
+
+        var prevBtn = document.getElementById(pagId + '-prev');
+        var nextBtn = document.getElementById(pagId + '-next');
+        prevBtn.disabled = (page === 1);
+        nextBtn.disabled = (page === totalPages);
+        prevBtn.onclick = function() { if (currentPage > 1) renderPage(currentPage - 1); };
+        nextBtn.onclick = function() { if (currentPage < totalPages) renderPage(currentPage + 1); };
+      }
+
+      renderPage(1);
+    }
+
+    initPagination('table-wip', 'pag-wip');
+    initPagination('table-noest', 'pag-noest');
+    initPagination('table-notempo', 'pag-notempo');
+    initPagination('table-resolution', 'pag-resolution');
+
+    // ── Accordion chevron rotation ──
+    var collapseHeaders = document.querySelectorAll('[data-bs-toggle="collapse"]');
+    collapseHeaders.forEach(function(header) {
+      var target = document.querySelector(header.getAttribute('data-bs-target'));
+      if (!target) return;
+      target.addEventListener('show.bs.collapse', function() { header.classList.remove('collapsed'); });
+      target.addEventListener('hide.bs.collapse', function() { header.classList.add('collapsed'); });
+    });
   });
 </script>
 </body>
