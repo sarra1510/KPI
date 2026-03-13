@@ -26,9 +26,7 @@ from sprint_kpi_calculator import (
     find_key_column,
     calc_capacity_utilization,
     calc_throughput,
-    calc_unplanned,
     calc_wip_end_sprint,
-    calc_support_load,
     find_no_estimation,
     find_no_tempo,
     calc_resolution_time,
@@ -250,11 +248,7 @@ def calculate():
         capacity_util, total_logged = calc_capacity_utilization(df_worklog, capacity_hours)
         total_logged_days = round(total_logged / HOURS_PER_DAY, 2)
         throughput, throughput_details = calc_throughput(df_end, key_col_end)
-        unplanned_count, unplanned_details = calc_unplanned(
-            df_start, df_end, key_col_start, key_col_end
-        )
         wip_count, wip_details = calc_wip_end_sprint(df_end, key_col_end)
-        support_load = calc_support_load(unplanned_count, throughput)
         no_est_count, no_est_details = find_no_estimation(df_end, key_col_end)
         no_tempo_count, no_tempo_details = find_no_tempo(df_end, df_worklog, key_col_end)
         avg_resolution_days, resolution_details = calc_resolution_time(df_end, key_col_end)
@@ -280,9 +274,7 @@ def calculate():
                 "Jours logués (j)",
                 "Capacity Utilization (%)",
                 "Throughput (tickets résolus)",
-                "Unplanned Tickets",
                 "WIP End Sprint",
-                "Support Load (%)",
                 "Tickets sans estimation",
                 "Tickets sans tempo",
                 "Temps moyen de résolution (j)",
@@ -292,9 +284,7 @@ def calculate():
                 total_logged_days,
                 capacity_util,
                 throughput,
-                unplanned_count,
                 wip_count,
-                support_load if support_load is not None else "N/A",
                 no_est_count,
                 no_tempo_count,
                 avg_resolution_days if avg_resolution_days is not None else "N/A",
@@ -304,8 +294,6 @@ def calculate():
 
     with pd.ExcelWriter(report_path, engine="openpyxl") as writer:
         kpi_data.to_excel(writer, sheet_name="KPI Summary", index=False)
-        if not unplanned_details.empty:
-            unplanned_details.to_excel(writer, sheet_name="Unplanned Tickets", index=False)
         if not wip_details.empty:
             wip_details.to_excel(writer, sheet_name="WIP End Sprint", index=False)
         if not no_est_details.empty:
@@ -324,9 +312,7 @@ def calculate():
         "total_logged_days": total_logged_days,
         "capacity_util": capacity_util,
         "throughput": throughput,
-        "unplanned_count": unplanned_count,
         "wip_count": wip_count,
-        "support_load": support_load,
         "no_est_count": no_est_count,
         "no_tempo_count": no_tempo_count,
         "avg_resolution_days": avg_resolution_days,
@@ -343,7 +329,6 @@ def calculate():
     return render_template(
         "results.html",
         kpis=kpis,
-        unplanned_rows=df_to_records(unplanned_details),
         wip_rows=df_to_records(wip_details),
         no_est_rows=df_to_records(no_est_details),
         no_tempo_rows=df_to_records(no_tempo_details),

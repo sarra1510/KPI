@@ -524,9 +524,7 @@ def main():
 
     capacity_util, total_logged = calc_capacity_utilization(df_worklog, capacity_hours)
     throughput, throughput_details = calc_throughput(df_end, key_col_end)
-    unplanned_count, unplanned_details = calc_unplanned(df_start, df_end, key_col_start, key_col_end)
     wip_count, wip_details = calc_wip_end_sprint(df_end, key_col_end)
-    support_load = calc_support_load(unplanned_count, throughput)
     no_est_count, no_est_details = find_no_estimation(df_end, key_col_end)
     no_tempo_count, no_tempo_details = find_no_tempo(df_end, df_worklog, key_col_end)
 
@@ -541,10 +539,7 @@ def main():
     print("-" * 60)
     print(f"  🔋 Capacity Utilization : {capacity_util}%")
     print(f"  ✅ Throughput (Resolved): {throughput} tickets")
-    print(f"  🆕 Unplanned Tickets    : {unplanned_count} tickets")
     print(f"  🔄 WIP End Sprint       : {wip_count} tickets")
-    support_str = f"{support_load}%" if support_load is not None else "N/A (throughput=0)"
-    print(f"  🛟 Support Load          : {support_str}")
     print(f"  ⚠️  Sans Estimation      : {no_est_count} tickets")
     print(f"  ⚠️  Sans Tempo (Worklog) : {no_tempo_count} tickets")
     print("=" * 60)
@@ -558,9 +553,7 @@ def main():
                 "Jours logués (j)",
                 "Capacity Utilization (%)",
                 "Throughput (tickets résolus)",
-                "Unplanned Tickets",
                 "WIP End Sprint",
-                "Support Load (%)",
                 "Tickets sans estimation",
                 "Tickets sans tempo",
             ],
@@ -569,17 +562,13 @@ def main():
                 total_logged_days,
                 capacity_util,
                 throughput,
-                unplanned_count,
                 wip_count,
-                support_load if support_load is not None else "N/A",
                 no_est_count,
                 no_tempo_count,
             ],
         })
         kpi_data.to_excel(writer, sheet_name="KPI Summary", index=False)
 
-        if not unplanned_details.empty:
-            unplanned_details.to_excel(writer, sheet_name="Unplanned Tickets", index=False)
         if not wip_details.empty:
             wip_details.to_excel(writer, sheet_name="WIP End Sprint", index=False)
         if not no_est_details.empty:
@@ -588,7 +577,7 @@ def main():
             no_tempo_details.to_excel(writer, sheet_name="Sans Tempo", index=False)
 
     print(f"\n✅ Rapport exporté: {output_file}")
-    print("   Onglets: KPI Summary | Unplanned Tickets | WIP End Sprint | Sans Estimation | Sans Tempo")
+    print("   Onglets: KPI Summary | WIP End Sprint | Sans Estimation | Sans Tempo")
 
 
 if __name__ == "__main__":
