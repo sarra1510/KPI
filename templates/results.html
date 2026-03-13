@@ -387,12 +387,12 @@
 
   {% if resolution_rows %}
   <div class="section-card card mb-3">
-    <div class="card-header collapsed d-flex align-items-center gap-2" data-bs-toggle="collapse" data-bs-target="#tbl-resolution" aria-expanded="false">
+    <div class="card-header d-flex align-items-center gap-2" data-bs-toggle="collapse" data-bs-target="#tbl-resolution" aria-expanded="true">
       <span class="chevron">▼</span>
       ⏳ Temps de résolution par ticket
       <span class="badge ms-1 badge-count" style="background:var(--nx-teal);">{{ resolution_rows | length }}</span>
     </div>
-    <div id="tbl-resolution" class="collapse">
+    <div id="tbl-resolution" class="collapse show">
       <div class="card-body p-0">
         <div class="table-responsive">
           <table class="table table-sm table-hover mb-0">
