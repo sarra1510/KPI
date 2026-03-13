@@ -393,7 +393,7 @@ def calc_resolution_time(df_end, df_worklog, key_col_end):
 
     Returns:
         avg_resolution_days (float | None): average resolution time rounded to 2 decimals.
-        resolution_details (DataFrame): Key, Summary, Status, Assignee,
+        resolution_details (DataFrame): Key, Projet, Priorité, Summary, Status, Assignee,
             Début réel (1er worklog), Date résolution, Temps de résolution (j).
     """
     resolved_col = find_column(df_end, ["Resolved", "resolved", "Resolution Date", "RESOLVED"])
@@ -444,33 +444,62 @@ def calc_resolution_time(df_end, df_worklog, key_col_end):
     if pd.isna(avg_days):
         return None, pd.DataFrame()
 
-    # Build detail DataFrame
-    detail_cols = [key_col_end]
+    # Derive Projet from Issue Key prefix
+    merged["Projet"] = merged[key_col_end].astype(str).str.extract(r"^([A-Z][A-Z0-9]*)-", expand=False)
+
+    # Get Priority column if available
+    priority_col = find_column(df_end, ["Priority", "priority", "PRIORITY", "Priorité", "priorité"])
+
+    # Build detail DataFrame with desired column order
+    detail_cols = [key_col_end, "Projet"]
+    if priority_col is not None and priority_col in merged.columns:
+        detail_cols.append(priority_col)
     for col in ["Summary", "Status", "Assignee"]:
         if col in merged.columns:
             detail_cols.append(col)
 
     detail = merged[detail_cols + ["_first_work_date", resolved_col, "Temps de résolution (j)"]].copy()
-    detail = detail.rename(columns={
+
+    rename_map = {
         "_first_work_date": "Début réel (1er worklog)",
         resolved_col: "Date résolution",
-    })
+        key_col_end: "Key",
+    }
+    if priority_col is not None and priority_col in detail.columns and priority_col != "Priorité":
+        rename_map[priority_col] = "Priorité"
+    detail = detail.rename(columns=rename_map)
 
     # Format dates for display
     for date_col in ["Début réel (1er worklog)", "Date résolution"]:
         if date_col in detail.columns:
             detail[date_col] = detail[date_col].dt.strftime("%Y-%m-%d").fillna("")
 
-    detail = detail.sort_values("Temps de résolution (j)", ascending=False).reset_index(drop=True)
+    # Custom priority sort order
+    priority_order = {"highest": 0, "high": 1, "medium": 2, "low": 3, "lowest": 4}
+    if "Priorité" in detail.columns:
+        detail["_prio_sort"] = detail["Priorité"].astype(str).str.lower().map(priority_order).fillna(99)
+        detail = detail.sort_values(
+            ["Projet", "_prio_sort", "Temps de résolution (j)"],
+            ascending=[True, True, False],
+        ).reset_index(drop=True)
+        detail = detail.drop(columns=["_prio_sort"])
+    else:
+        detail = detail.sort_values(
+            ["Projet", "Temps de résolution (j)"],
+            ascending=[True, False],
+        ).reset_index(drop=True)
 
     return avg_days, detail
 
 
-def calc_time_per_project(df_worklog):
+def calc_time_per_project(df_worklog, df_end=None, key_col_end=None):
     """Break down total logged hours by project (derived from the Issue Key prefix).
 
+    Optionally joins with df_end to include Priority per ticket.
+
     Returns:
-        DataFrame with columns: Projet, Heures, Jours, % du total — sorted by Jours descending.
+        DataFrame with columns: Projet, [Priorité,] Heures, Jours, % du total
+        Sorted by Projet ascending, then Jours descending within each project.
     """
     key_col = find_column(df_worklog, [
         "Issue Key", "Issue key", "issue key", "ISSUE KEY",
@@ -488,14 +517,38 @@ def calc_time_per_project(df_worklog):
     df["Projet"] = df[key_col].astype(str).str.extract(r"^([A-Z][A-Z0-9]*)-", expand=False)
     df = df.dropna(subset=["Projet"])
 
-    grouped = df.groupby("Projet")[hours_col].sum().reset_index()
-    grouped.columns = ["Projet", "Heures"]
+    # Try to join with df_end to get Priority
+    priority_col = None
+    if df_end is not None and key_col_end is not None:
+        priority_col = find_column(df_end, ["Priority", "priority", "PRIORITY", "Priorité", "priorité"])
+
+    if priority_col is not None:
+        prio_df = df_end[[key_col_end, priority_col]].copy()
+        prio_df = prio_df.rename(columns={key_col_end: "_join_key", priority_col: "Priorité"})
+        prio_df["_join_key"] = prio_df["_join_key"].astype(str).str.strip()
+        df["_join_key"] = df[key_col].astype(str).str.strip()
+        df = df.merge(prio_df, on="_join_key", how="left")
+        df["Priorité"] = df["Priorité"].fillna("Unknown")
+        df = df.drop(columns=["_join_key"])
+
+        grouped = df.groupby(["Projet", "Priorité"])[hours_col].sum().reset_index()
+        grouped.columns = ["Projet", "Priorité", "Heures"]
+    else:
+        grouped = df.groupby("Projet")[hours_col].sum().reset_index()
+        grouped.columns = ["Projet", "Heures"]
+
     total_hours = grouped["Heures"].sum()
     grouped["Jours"] = (grouped["Heures"] / HOURS_PER_DAY).round(2)
     grouped["% du total"] = (
         (grouped["Heures"] / total_hours * 100).round(1) if total_hours > 0 else 0
     )
-    grouped = grouped.sort_values("Jours", ascending=False).reset_index(drop=True)
+
+    if priority_col is not None:
+        grouped = grouped.sort_values(
+            ["Projet", "Jours"], ascending=[True, False]
+        ).reset_index(drop=True)
+    else:
+        grouped = grouped.sort_values("Jours", ascending=False).reset_index(drop=True)
 
     return grouped
 

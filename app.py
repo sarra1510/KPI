@@ -252,7 +252,7 @@ def calculate():
         no_est_count, no_est_details = find_no_estimation(df_end, key_col_end)
         no_tempo_count, no_tempo_details = find_no_tempo(df_end, df_worklog, key_col_end)
         avg_resolution_days, resolution_details = calc_resolution_time(df_end, df_worklog, key_col_end)
-        project_time_df = calc_time_per_project(df_worklog)
+        project_time_df = calc_time_per_project(df_worklog, df_end, key_col_end)
 
     except ValueError as e:
         flash(str(e), "danger")
