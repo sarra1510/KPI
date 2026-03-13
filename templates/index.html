@@ -117,7 +117,7 @@
 
       <div class="mb-4">
         <label for="capacity" class="form-label fw-semibold">
-          Capacité équipe (heures) <span class="text-danger">*</span>
+          Capacité équipe (jours) <span class="text-danger">*</span>
         </label>
         <div class="input-group">
           <span class="input-group-text">⏱️</span>
@@ -126,14 +126,14 @@
             id="capacity"
             name="capacity"
             class="form-control"
-            placeholder="ex. 240"
+            placeholder="ex. 30"
             min="0.1"
             step="any"
             required
           />
-          <span class="input-group-text">h</span>
+          <span class="input-group-text">j</span>
         </div>
-        <div class="form-text">Somme des heures disponibles de l'équipe pendant le sprint.</div>
+        <div class="form-text">Somme des jours disponibles de l'équipe pendant le sprint.</div>
       </div>
 
       <div class="d-grid">
@@ -167,7 +167,7 @@
           <tr>
             <td class="ps-3" style="font-size:.88rem;word-break:break-all;">{{ entry.filename }}</td>
             <td style="font-size:.88rem;white-space:nowrap;">{{ entry.uploaded_at }}</td>
-            <td style="font-size:.88rem;">{{ entry.capacity }}h</td>
+            <td style="font-size:.88rem;">{{ entry.capacity }}j</td>
             <td>
               <a href="/download/{{ entry.report_filename }}" class="history-link" style="font-size:.85rem;">
                 ⬇️ Excel

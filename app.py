@@ -45,6 +45,7 @@ os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 ALLOWED_EXTENSIONS = {"xlsx", "xls"}
 HISTORY_FILE = os.path.join(UPLOAD_FOLDER, "history.json")
 HISTORY_MAX = 5
+HOURS_PER_DAY = 8
 
 
 def load_history():
@@ -220,11 +221,12 @@ def calculate():
         flash("Format de fichier invalide. Veuillez uploader un fichier .xlsx ou .xls.", "danger")
         return redirect(url_for("index"))
 
-    # Validate capacity
+    # Validate capacity (input is now in days; 1 day = 8 hours)
     try:
-        capacity_hours = float(request.form.get("capacity", "0"))
-        if capacity_hours <= 0:
+        capacity_days = float(request.form.get("capacity", "0"))
+        if capacity_days <= 0:
             raise ValueError
+        capacity_hours = capacity_days * HOURS_PER_DAY
     except (ValueError, TypeError):
         flash("Capacité équipe invalide. Veuillez entrer un nombre positif.", "danger")
         return redirect(url_for("index"))
@@ -244,6 +246,7 @@ def calculate():
         key_col_end = find_key_column_web(df_end, SHEET_END)
 
         capacity_util, total_logged = calc_capacity_utilization(df_worklog, capacity_hours)
+        total_logged_days = round(total_logged / HOURS_PER_DAY, 2)
         throughput, throughput_details = calc_throughput(df_end, key_col_end)
         unplanned_count, unplanned_details = calc_unplanned(
             df_start, df_end, key_col_start, key_col_end
@@ -269,8 +272,8 @@ def calculate():
     kpi_data = pd.DataFrame(
         {
             "KPI": [
-                "Capacité équipe (h)",
-                "Heures loguées (h)",
+                "Capacité équipe (j)",
+                "Jours logués (j)",
                 "Capacity Utilization (%)",
                 "Throughput (tickets résolus)",
                 "Unplanned Tickets",
@@ -280,8 +283,8 @@ def calculate():
                 "Tickets sans tempo",
             ],
             "Valeur": [
-                capacity_hours,
-                total_logged,
+                capacity_days,
+                total_logged_days,
                 capacity_util,
                 throughput,
                 unplanned_count,
@@ -305,8 +308,10 @@ def calculate():
             no_tempo_details.to_excel(writer, sheet_name="Sans Tempo", index=False)
 
     kpis = {
+        "capacity_days": capacity_days,
         "capacity_hours": capacity_hours,
         "total_logged": total_logged,
+        "total_logged_days": total_logged_days,
         "capacity_util": min(capacity_util, 100),
         "throughput": throughput,
         "unplanned_count": unplanned_count,
@@ -320,7 +325,7 @@ def calculate():
     save_history({
         "filename": original_filename,
         "uploaded_at": datetime.now().strftime("%Y-%m-%d %H:%M"),
-        "capacity": capacity_hours,
+        "capacity": capacity_days,
         "report_filename": report_filename,
     })
 

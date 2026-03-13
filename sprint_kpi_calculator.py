@@ -26,6 +26,8 @@ SHEET_START = "Start"
 SHEET_END = "End Sprint"
 SHEET_WORKLOG = "Worklogs"
 
+HOURS_PER_DAY = 8
+
 DONE_STATUSES = [
     "closed",
     "customer pending",
@@ -384,14 +386,14 @@ def find_no_tempo(df_end, df_worklog, key_col_end):
     return len(no_tempo_keys), no_tempo_df[detail_cols].copy()
 
 def get_capacity_input():
-    """Prompt user for team capacity in hours."""
+    """Prompt user for team capacity in days (converted to hours internally)."""
     while True:
         try:
-            capacity = float(input("\n📊 Entrez la capacité de l'équipe pour ce sprint (en heures): "))
-            if capacity <= 0:
+            capacity_days = float(input("\n📊 Entrez la capacité de l'équipe pour ce sprint (en jours): "))
+            if capacity_days <= 0:
                 print("   La capacité doit être > 0.")
                 continue
-            return capacity
+            return capacity_days * HOURS_PER_DAY
         except ValueError:
             print("   Veuillez entrer un nombre valide.")
 
@@ -429,9 +431,11 @@ def main():
     print("\n" + "=" * 60)
     print("            📊 SPRINT KPI DASHBOARD")
     print("=" * 60)
+    capacity_days = capacity_hours / HOURS_PER_DAY
+    total_logged_days = round(total_logged / HOURS_PER_DAY, 2)
     print(f"  📁 Fichier           : {filepath}")
-    print(f"  👥 Capacité équipe   : {capacity_hours}h")
-    print(f"  ⏱️  Heures loguées    : {total_logged}h")
+    print(f"  👥 Capacité équipe   : {capacity_days}j")
+    print(f"  ⏱️  Jours logués      : {total_logged_days}j")
     print("-" * 60)
     print(f"  🔋 Capacity Utilization : {capacity_util}%")
     print(f"  ✅ Throughput (Resolved): {throughput} tickets")
@@ -448,8 +452,8 @@ def main():
     with pd.ExcelWriter(output_file, engine="openpyxl") as writer:
         kpi_data = pd.DataFrame({
             "KPI": [
-                "Capacité équipe (h)",
-                "Heures loguées (h)",
+                "Capacité équipe (j)",
+                "Jours logués (j)",
                 "Capacity Utilization (%)",
                 "Throughput (tickets résolus)",
                 "Unplanned Tickets",
@@ -459,8 +463,8 @@ def main():
                 "Tickets sans tempo",
             ],
             "Valeur": [
-                capacity_hours,
-                total_logged,
+                capacity_days,
+                total_logged_days,
                 capacity_util,
                 throughput,
                 unplanned_count,
