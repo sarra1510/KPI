@@ -207,18 +207,18 @@
     <div class="col-12 col-md-3 col-lg-2">
       <div class="nx-sidebar">
         <div class="nx-sidebar-title">Navigation</div>
-        <button type="button" class="nx-nav-item active" data-section="overview">📊 Vue d'ensemble</button>
+        <a href="javascript:void(0)" class="nx-nav-item active" onclick="nxNav('overview', this)">📊 Vue d'ensemble</a>
         {% if wip_rows %}
-        <button type="button" class="nx-nav-item" data-section="wip">🔄 WIP End Sprint</button>
+        <a href="javascript:void(0)" class="nx-nav-item" onclick="nxNav('wip', this)">🔄 WIP End Sprint</a>
         {% endif %}
         {% if no_est_rows %}
-        <button type="button" class="nx-nav-item" data-section="noest">⚠️ Sans estimation</button>
+        <a href="javascript:void(0)" class="nx-nav-item" onclick="nxNav('noest', this)">⚠️ Sans estimation</a>
         {% endif %}
         {% if no_tempo_rows %}
-        <button type="button" class="nx-nav-item" data-section="notempo">⏱️ Sans tempo</button>
+        <a href="javascript:void(0)" class="nx-nav-item" onclick="nxNav('notempo', this)">⏱️ Sans tempo</a>
         {% endif %}
         {% if resolution_rows %}
-        <button type="button" class="nx-nav-item" data-section="resolution">⏳ Temps de résolution</button>
+        <a href="javascript:void(0)" class="nx-nav-item" onclick="nxNav('resolution', this)">⏳ Temps de résolution</a>
         {% endif %}
       </div>
     </div>
@@ -376,7 +376,7 @@
 
       <!-- ══ Section: WIP ══ -->
       {% if wip_rows %}
-      <div id="section-wip" class="nx-section d-none">
+      <div id="section-wip" class="nx-section" style="display:none">
         <div class="section-card card mb-3">
           <div class="card-header d-flex align-items-center gap-2">
             🔄 WIP End Sprint
@@ -411,7 +411,7 @@
 
       <!-- ══ Section: Sans estimation ══ -->
       {% if no_est_rows %}
-      <div id="section-noest" class="nx-section d-none">
+      <div id="section-noest" class="nx-section" style="display:none">
         <div class="section-card card mb-3">
           <div class="card-header d-flex align-items-center gap-2">
             ⚠️ Tickets sans estimation
@@ -446,7 +446,7 @@
 
       <!-- ══ Section: Sans tempo ══ -->
       {% if no_tempo_rows %}
-      <div id="section-notempo" class="nx-section d-none">
+      <div id="section-notempo" class="nx-section" style="display:none">
         <div class="section-card card mb-3">
           <div class="card-header d-flex align-items-center gap-2">
             ⏱️ Tickets sans tempo (sans worklog)
@@ -481,7 +481,7 @@
 
       <!-- ══ Section: Temps de résolution ══ -->
       {% if resolution_rows %}
-      <div id="section-resolution" class="nx-section d-none">
+      <div id="section-resolution" class="nx-section" style="display:none">
         <div class="section-card card mb-3">
           <div class="card-header d-flex align-items-center gap-2">
             ⏳ Temps de résolution par ticket
@@ -518,6 +518,27 @@
   </div><!-- /row -->
 </div><!-- /container -->
 
+<script>
+function nxNav(sectionName, clickedEl) {
+  // 1. Remove 'active' from all nav items
+  var allNav = document.querySelectorAll('.nx-nav-item');
+  for (var i = 0; i < allNav.length; i++) {
+    allNav[i].classList.remove('active');
+  }
+  // 2. Add 'active' to clicked element
+  clickedEl.classList.add('active');
+  // 3. Hide all sections
+  var allSections = document.querySelectorAll('.nx-section');
+  for (var j = 0; j < allSections.length; j++) {
+    allSections[j].style.display = 'none';
+  }
+  // 4. Show the target section
+  var target = document.getElementById('section-' + sectionName);
+  if (target) {
+    target.style.display = '';
+  }
+}
+</script>
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-YvpcrYf0tY3lHB60NNkmXc4s9bIOgUxi8T/jzmq0oWnOFvYqbsGH5vxsVLXuLVrJ" crossorigin="anonymous"></script>
 <script>
   document.addEventListener('DOMContentLoaded', function() {
@@ -526,40 +547,6 @@
     tooltipEls.forEach(function(el) {
       new bootstrap.Tooltip(el);
     });
-
-    // ── Sidebar navigation (event delegation) ──
-    var sidebar = document.querySelector('.nx-sidebar');
-    if (sidebar) {
-      sidebar.addEventListener('click', function(e) {
-        var btn = e.target.closest('.nx-nav-item');
-        if (!btn) return;
-
-        e.preventDefault();
-        e.stopPropagation();
-
-        var targetSection = btn.getAttribute('data-section');
-        console.log('[NAV] Clicked:', targetSection);
-
-        // Update active state
-        var allBtns = document.querySelectorAll('.nx-nav-item');
-        for (var i = 0; i < allBtns.length; i++) {
-          allBtns[i].classList.remove('active');
-        }
-        btn.classList.add('active');
-
-        // Show/hide sections
-        var allSections = document.querySelectorAll('.nx-section');
-        for (var j = 0; j < allSections.length; j++) {
-          var sec = allSections[j];
-          if (sec.id === 'section-' + targetSection) {
-            sec.classList.remove('d-none');
-            console.log('[NAV] Showing:', sec.id);
-          } else {
-            sec.classList.add('d-none');
-          }
-        }
-      });
-    }
 
     // ── Client-side pagination ──
     var PAGE_SIZE = 10;
