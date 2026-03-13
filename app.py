@@ -307,7 +307,7 @@ def calculate():
     kpis = {
         "capacity_hours": capacity_hours,
         "total_logged": total_logged,
-        "capacity_util": capacity_util,
+        "capacity_util": min(capacity_util, 100),
         "throughput": throughput,
         "unplanned_count": unplanned_count,
         "wip_count": wip_count,
