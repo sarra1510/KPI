@@ -3,8 +3,11 @@ Flask web interface for the Sprint KPI Calculator.
 Provides a drag-and-drop file upload and a KPI dashboard in the browser.
 """
 
+import json
 import os
 import uuid
+from datetime import datetime
+
 import pandas as pd
 from flask import (
     Flask,
@@ -40,6 +43,31 @@ UPLOAD_FOLDER = os.path.join(os.path.dirname(__file__), "uploads")
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 
 ALLOWED_EXTENSIONS = {"xlsx", "xls"}
+HISTORY_FILE = os.path.join(UPLOAD_FOLDER, "history.json")
+HISTORY_MAX = 5
+
+
+def load_history():
+    """Load upload history from JSON file."""
+    if not os.path.isfile(HISTORY_FILE):
+        return []
+    try:
+        with open(HISTORY_FILE, "r", encoding="utf-8") as f:
+            return json.load(f)
+    except (json.JSONDecodeError, OSError):
+        return []
+
+
+def save_history(entry):
+    """Prepend a new entry to the history file, keeping only the last HISTORY_MAX entries."""
+    history = load_history()
+    history.insert(0, entry)
+    history = history[:HISTORY_MAX]
+    try:
+        with open(HISTORY_FILE, "w", encoding="utf-8") as f:
+            json.dump(history, f, ensure_ascii=False, indent=2)
+    except OSError:
+        pass
 
 
 def allowed_file(filename):
@@ -172,7 +200,8 @@ def df_to_records(df):
 
 @app.route("/")
 def index():
-    return render_template("index.html")
+    history = load_history()
+    return render_template("index.html", history=history)
 
 
 @app.route("/calculate", methods=["POST"])
@@ -277,7 +306,7 @@ def calculate():
     kpis = {
         "capacity_hours": capacity_hours,
         "total_logged": total_logged,
-        "capacity_util": capacity_util,
+        "capacity_util": min(capacity_util, 100),
         "throughput": throughput,
         "unplanned_count": unplanned_count,
         "wip_count": wip_count,
@@ -285,6 +314,14 @@ def calculate():
         "no_est_count": no_est_count,
         "no_tempo_count": no_tempo_count,
     }
+
+    # Save to upload history
+    save_history({
+        "filename": file.filename,
+        "uploaded_at": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+        "capacity": capacity_hours,
+        "report_filename": report_filename,
+    })
 
     return render_template(
         "results.html",

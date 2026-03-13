@@ -7,65 +7,130 @@
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous" />
   <style>
     body { background: #f0f4f8; }
-    .hero { background: linear-gradient(135deg, #1e3a5f 0%, #2563eb 100%); color: #fff; padding: 2.5rem 0 1.5rem; margin-bottom: 2rem; }
-    .hero h1 { font-size: 2rem; font-weight: 700; }
+    /* Header */
+    .topbar {
+      background: linear-gradient(135deg, #1a1a2e 0%, #00BFA6 100%);
+      color: #fff;
+      padding: 1.25rem 0;
+      margin-bottom: 2rem;
+    }
+    .topbar h1 { font-size: 1.6rem; font-weight: 700; letter-spacing: .04em; margin: 0; }
+    .logo-circle {
+      width: 48px; height: 48px;
+      background: #1a1a2e;
+      border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      border: 2px solid rgba(255,255,255,.3);
+      flex-shrink: 0;
+    }
+    /* Hero card */
+    .hero-card {
+      background: linear-gradient(135deg, #00997D 0%, #00BFA6 100%);
+      border: none;
+      border-radius: 1rem;
+      color: #fff;
+      box-shadow: 0 4px 20px rgba(0,191,166,.35);
+    }
+    .hero-value { font-size: 3.5rem; font-weight: 800; line-height: 1; }
+    .hero-label { font-size: .85rem; text-transform: uppercase; letter-spacing: .08em; opacity: .85; margin-top: .4rem; }
+    .hero-progress { height: 10px; border-radius: 5px; background: rgba(255,255,255,.3); }
+    .hero-progress-bar { border-radius: 5px; background: #fff; }
+    /* KPI cards */
     .kpi-card {
       border: none;
       border-radius: 1rem;
       box-shadow: 0 2px 12px rgba(0,0,0,.08);
       transition: transform .15s;
       height: 100%;
+      background: #fff;
     }
-    .kpi-card:hover { transform: translateY(-3px); }
+    .kpi-card:hover { transform: translateY(-3px); box-shadow: 0 6px 20px rgba(0,0,0,.12); }
     .kpi-value { font-size: 2.4rem; font-weight: 800; line-height: 1; }
-    .kpi-label { font-size: .85rem; color: #6b7280; text-transform: uppercase; letter-spacing: .05em; margin-top: .3rem; }
+    .kpi-label { font-size: .78rem; color: #6b7280; text-transform: uppercase; letter-spacing: .06em; margin-top: .4rem; }
     .kpi-icon { font-size: 1.8rem; }
-    .section-card { border: none; border-radius: 1rem; box-shadow: 0 2px 12px rgba(0,0,0,.08); }
-    .table th { background: #f8f9fa; font-size: .85rem; color: #374151; }
+    /* Section cards (accordion) */
+    .section-card { border: none; border-radius: 1rem; box-shadow: 0 2px 12px rgba(0,0,0,.08); overflow: hidden; }
+    .section-card .accordion-button {
+      background: #fff;
+      font-weight: 600;
+      font-size: .95rem;
+      color: #1a1a2e;
+    }
+    .section-card .accordion-button:not(.collapsed) { background: #E0F7F3; color: #00604f; box-shadow: none; }
+    .section-card .accordion-button::after { filter: none; }
+    .table th { background: #f8f9fa; font-size: .82rem; color: #374151; text-transform: uppercase; letter-spacing: .04em; }
     .table td { font-size: .88rem; vertical-align: middle; }
-    .badge-count { font-size: .95rem; font-weight: 700; }
-    .btn-download { background: #2563eb; border-color: #2563eb; color: #fff; }
-    .btn-download:hover { background: #1d4ed8; border-color: #1d4ed8; color: #fff; }
+    .badge-count { font-size: .9rem; font-weight: 700; }
+    /* Button styles */
+    .btn-neoxam { background: #00BFA6; border-color: #00BFA6; color: #fff; }
+    .btn-neoxam:hover { background: #00997D; border-color: #00997D; color: #fff; }
+    /* Color classes */
     .color-green { color: #16a34a; }
     .color-yellow { color: #d97706; }
     .color-red { color: #dc2626; }
-    .color-blue { color: #2563eb; }
+    .color-teal { color: #00BFA6; }
     .color-purple { color: #7c3aed; }
     .color-gray { color: #6b7280; }
   </style>
 </head>
 <body>
 
-<div class="hero text-center">
-  <h1>📊 Sprint KPI Dashboard</h1>
-  <p class="mb-0 opacity-75">Capacité équipe : <strong>{{ kpis.capacity_hours }}h</strong> &nbsp;|&nbsp; Heures loguées : <strong>{{ kpis.total_logged }}h</strong></p>
+<!-- Top bar -->
+<div class="topbar">
+  <div class="container d-flex align-items-center justify-content-between" style="max-width:1100px;">
+    <div class="d-flex align-items-center gap-3">
+      <div class="logo-circle">
+        <svg width="26" height="26" viewBox="0 0 28 28" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M4 4L13 14L4 24H8.5L14 17.5L19.5 24H24L15 14L24 4H19.5L14 10.5L8.5 4H4Z" fill="#00BFA6"/>
+        </svg>
+      </div>
+      <h1>SPRINT KPI DASHBOARD</h1>
+    </div>
+    <div class="d-flex gap-2">
+      <a href="/download/{{ report_filename }}" class="btn btn-neoxam btn-sm px-3">
+        ⬇️ Export Excel
+      </a>
+      <a href="/" class="btn btn-outline-light btn-sm px-3">
+        🔄 Nouveau fichier
+      </a>
+    </div>
+  </div>
 </div>
 
 <div class="container pb-5" style="max-width: 1100px;">
 
-  <!-- KPI Cards -->
-  <div class="row g-3 mb-4">
-
-    <!-- Capacity Utilization -->
-    <div class="col-6 col-md-4 col-lg-3">
-      <div class="kpi-card card p-3 text-center">
-        <div class="kpi-icon">🔋</div>
-        <div class="kpi-value
-          {% if kpis.capacity_util >= 90 %}color-green
-          {% elif kpis.capacity_util >= 70 %}color-yellow
-          {% else %}color-red{% endif %}">
+  <!-- Hero Card: Capacity Utilization -->
+  <div class="hero-card card p-4 mb-4">
+    <div class="row align-items-center">
+      <div class="col-md-6">
+        <div class="hero-label">CAPACITY UTILIZATION</div>
+        <div class="hero-value mt-2">
           {{ kpis.capacity_util }}%
         </div>
-        <div class="kpi-label">Capacity Utilization</div>
+        <div class="mt-3">
+          <div class="hero-progress">
+            <div class="hero-progress-bar" style="width: {{ kpis.capacity_util }}%;"></div>
+          </div>
+        </div>
+      </div>
+      <div class="col-md-6 mt-3 mt-md-0 text-md-end">
+        <div style="opacity:.85;font-size:.95rem;">
+          <span>⏱️ Capacité équipe : <strong>{{ kpis.capacity_hours }}h</strong></span><br/>
+          <span>⏰ Heures loguées : <strong>{{ kpis.total_logged }}h</strong></span>
+        </div>
       </div>
     </div>
+  </div>
+
+  <!-- KPI Cards grid -->
+  <div class="row g-3 mb-4">
 
     <!-- Throughput -->
     <div class="col-6 col-md-4 col-lg-3">
       <div class="kpi-card card p-3 text-center">
         <div class="kpi-icon">✅</div>
         <div class="kpi-value color-green">{{ kpis.throughput }}</div>
-        <div class="kpi-label">Throughput (Résolus)</div>
+        <div class="kpi-label">THROUGHPUT (RÉSOLUS)</div>
       </div>
     </div>
 
@@ -79,7 +144,7 @@
           {% else %}color-red{% endif %}">
           {{ kpis.unplanned_count }}
         </div>
-        <div class="kpi-label">Unplanned Tickets</div>
+        <div class="kpi-label">UNPLANNED TICKETS</div>
       </div>
     </div>
 
@@ -93,7 +158,7 @@
           {% else %}color-red{% endif %}">
           {{ kpis.wip_count }}
         </div>
-        <div class="kpi-label">WIP End Sprint</div>
+        <div class="kpi-label">WIP END SPRINT</div>
       </div>
     </div>
 
@@ -111,7 +176,7 @@
         {% else %}
           <div class="kpi-value color-gray">N/A</div>
         {% endif %}
-        <div class="kpi-label">Support Load</div>
+        <div class="kpi-label">SUPPORT LOAD</div>
       </div>
     </div>
 
@@ -125,7 +190,7 @@
           {% else %}color-red{% endif %}">
           {{ kpis.no_est_count }}
         </div>
-        <div class="kpi-label">Sans Estimation</div>
+        <div class="kpi-label">SANS ESTIMATION</div>
       </div>
     </div>
 
@@ -139,7 +204,7 @@
           {% else %}color-red{% endif %}">
           {{ kpis.no_tempo_count }}
         </div>
-        <div class="kpi-label">Sans Tempo (Worklog)</div>
+        <div class="kpi-label">SANS TEMPO</div>
       </div>
     </div>
 
@@ -147,148 +212,157 @@
     <div class="col-6 col-md-4 col-lg-3">
       <div class="kpi-card card p-3 text-center">
         <div class="kpi-icon">⏰</div>
-        <div class="kpi-value color-blue">{{ kpis.total_logged }}</div>
-        <div class="kpi-label">Heures loguées (h)</div>
+        <div class="kpi-value color-teal">{{ kpis.total_logged }}</div>
+        <div class="kpi-label">HEURES LOGUÉES</div>
       </div>
     </div>
 
   </div>
 
-  <!-- Download button -->
-  <div class="text-center mb-4">
-    <a href="/download/{{ report_filename }}" class="btn btn-download btn-lg px-5">
-      ⬇️ Télécharger le rapport Excel
-    </a>
-    <a href="/" class="btn btn-outline-secondary btn-lg px-4 ms-2">
-      🔄 Nouveau calcul
-    </a>
-  </div>
+  <!-- Detail tables (accordion / collapsible) -->
+  <div class="accordion d-flex flex-column gap-3" id="detailsAccordion">
 
-  <!-- Detail tables -->
-
-  {% if unplanned_rows %}
-  <div class="section-card card mb-3">
-    <div class="card-header bg-white fw-semibold">
-      🆕 Unplanned Tickets
-      <span class="badge bg-warning text-dark ms-2 badge-count">{{ unplanned_rows | length }}</span>
-    </div>
-    <div class="card-body p-0">
-      <div class="table-responsive">
-        <table class="table table-sm table-hover mb-0">
-          <thead>
-            <tr>
-              {% for col in unplanned_rows[0].keys() %}
-              <th>{{ col }}</th>
-              {% endfor %}
-            </tr>
-          </thead>
-          <tbody>
-            {% for row in unplanned_rows %}
-            <tr>
-              {% for val in row.values() %}
-              <td>{{ val }}</td>
-              {% endfor %}
-            </tr>
-            {% endfor %}
-          </tbody>
-        </table>
+    {% if unplanned_rows %}
+    <div class="section-card accordion-item">
+      <h2 class="accordion-header">
+        <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#collapseUnplanned" aria-expanded="true" aria-controls="collapseUnplanned">
+          🆕 Unplanned Tickets
+          <span class="badge bg-warning text-dark ms-2 badge-count">{{ unplanned_rows | length }}</span>
+        </button>
+      </h2>
+      <div id="collapseUnplanned" class="accordion-collapse collapse show" data-bs-parent="#detailsAccordion">
+        <div class="accordion-body p-0">
+          <div class="table-responsive">
+            <table class="table table-sm table-hover mb-0">
+              <thead>
+                <tr>
+                  {% for col in unplanned_rows[0].keys() %}
+                  <th>{{ col }}</th>
+                  {% endfor %}
+                </tr>
+              </thead>
+              <tbody>
+                {% for row in unplanned_rows %}
+                <tr>
+                  {% for val in row.values() %}
+                  <td>{{ val }}</td>
+                  {% endfor %}
+                </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+        </div>
       </div>
     </div>
-  </div>
-  {% endif %}
+    {% endif %}
 
-  {% if wip_rows %}
-  <div class="section-card card mb-3">
-    <div class="card-header bg-white fw-semibold">
-      🔄 WIP End Sprint
-      <span class="badge bg-secondary ms-2 badge-count">{{ wip_rows | length }}</span>
-    </div>
-    <div class="card-body p-0">
-      <div class="table-responsive">
-        <table class="table table-sm table-hover mb-0">
-          <thead>
-            <tr>
-              {% for col in wip_rows[0].keys() %}
-              <th>{{ col }}</th>
-              {% endfor %}
-            </tr>
-          </thead>
-          <tbody>
-            {% for row in wip_rows %}
-            <tr>
-              {% for val in row.values() %}
-              <td>{{ val }}</td>
-              {% endfor %}
-            </tr>
-            {% endfor %}
-          </tbody>
-        </table>
+    {% if wip_rows %}
+    <div class="section-card accordion-item">
+      <h2 class="accordion-header">
+        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseWip" aria-expanded="false" aria-controls="collapseWip">
+          🔄 WIP End Sprint
+          <span class="badge bg-secondary ms-2 badge-count">{{ wip_rows | length }}</span>
+        </button>
+      </h2>
+      <div id="collapseWip" class="accordion-collapse collapse" data-bs-parent="#detailsAccordion">
+        <div class="accordion-body p-0">
+          <div class="table-responsive">
+            <table class="table table-sm table-hover mb-0">
+              <thead>
+                <tr>
+                  {% for col in wip_rows[0].keys() %}
+                  <th>{{ col }}</th>
+                  {% endfor %}
+                </tr>
+              </thead>
+              <tbody>
+                {% for row in wip_rows %}
+                <tr>
+                  {% for val in row.values() %}
+                  <td>{{ val }}</td>
+                  {% endfor %}
+                </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+        </div>
       </div>
     </div>
-  </div>
-  {% endif %}
+    {% endif %}
 
-  {% if no_est_rows %}
-  <div class="section-card card mb-3">
-    <div class="card-header bg-white fw-semibold">
-      ⚠️ Tickets sans estimation
-      <span class="badge bg-danger ms-2 badge-count">{{ no_est_rows | length }}</span>
-    </div>
-    <div class="card-body p-0">
-      <div class="table-responsive">
-        <table class="table table-sm table-hover mb-0">
-          <thead>
-            <tr>
-              {% for col in no_est_rows[0].keys() %}
-              <th>{{ col }}</th>
-              {% endfor %}
-            </tr>
-          </thead>
-          <tbody>
-            {% for row in no_est_rows %}
-            <tr>
-              {% for val in row.values() %}
-              <td>{{ val }}</td>
-              {% endfor %}
-            </tr>
-            {% endfor %}
-          </tbody>
-        </table>
+    {% if no_est_rows %}
+    <div class="section-card accordion-item">
+      <h2 class="accordion-header">
+        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseNoEst" aria-expanded="false" aria-controls="collapseNoEst">
+          ⚠️ Tickets sans estimation
+          <span class="badge bg-danger ms-2 badge-count">{{ no_est_rows | length }}</span>
+        </button>
+      </h2>
+      <div id="collapseNoEst" class="accordion-collapse collapse" data-bs-parent="#detailsAccordion">
+        <div class="accordion-body p-0">
+          <div class="table-responsive">
+            <table class="table table-sm table-hover mb-0">
+              <thead>
+                <tr>
+                  {% for col in no_est_rows[0].keys() %}
+                  <th>{{ col }}</th>
+                  {% endfor %}
+                </tr>
+              </thead>
+              <tbody>
+                {% for row in no_est_rows %}
+                <tr>
+                  {% for val in row.values() %}
+                  <td>{{ val }}</td>
+                  {% endfor %}
+                </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+        </div>
       </div>
     </div>
-  </div>
-  {% endif %}
+    {% endif %}
 
-  {% if no_tempo_rows %}
-  <div class="section-card card mb-3">
-    <div class="card-header bg-white fw-semibold">
-      ⏱️ Tickets sans tempo (sans worklog)
-      <span class="badge bg-danger ms-2 badge-count">{{ no_tempo_rows | length }}</span>
-    </div>
-    <div class="card-body p-0">
-      <div class="table-responsive">
-        <table class="table table-sm table-hover mb-0">
-          <thead>
-            <tr>
-              {% for col in no_tempo_rows[0].keys() %}
-              <th>{{ col }}</th>
-              {% endfor %}
-            </tr>
-          </thead>
-          <tbody>
-            {% for row in no_tempo_rows %}
-            <tr>
-              {% for val in row.values() %}
-              <td>{{ val }}</td>
-              {% endfor %}
-            </tr>
-            {% endfor %}
-          </tbody>
-        </table>
+    {% if no_tempo_rows %}
+    <div class="section-card accordion-item">
+      <h2 class="accordion-header">
+        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseNoTempo" aria-expanded="false" aria-controls="collapseNoTempo">
+          ⏱️ Tickets sans tempo (sans worklog)
+          <span class="badge bg-danger ms-2 badge-count">{{ no_tempo_rows | length }}</span>
+        </button>
+      </h2>
+      <div id="collapseNoTempo" class="accordion-collapse collapse" data-bs-parent="#detailsAccordion">
+        <div class="accordion-body p-0">
+          <div class="table-responsive">
+            <table class="table table-sm table-hover mb-0">
+              <thead>
+                <tr>
+                  {% for col in no_tempo_rows[0].keys() %}
+                  <th>{{ col }}</th>
+                  {% endfor %}
+                </tr>
+              </thead>
+              <tbody>
+                {% for row in no_tempo_rows %}
+                <tr>
+                  {% for val in row.values() %}
+                  <td>{{ val }}</td>
+                  {% endfor %}
+                </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+        </div>
       </div>
     </div>
+    {% endif %}
+
   </div>
-  {% endif %}
 
 </div>
 

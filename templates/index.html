@@ -3,36 +3,77 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Sprint KPI Calculator</title>
+  <title>Sprint KPI Dashboard</title>
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous" />
   <style>
     body { background: #f0f4f8; }
-    .hero { background: linear-gradient(135deg, #1e3a5f 0%, #2563eb 100%); color: #fff; padding: 3rem 0 2rem; margin-bottom: 2rem; }
-    .hero h1 { font-size: 2.2rem; font-weight: 700; }
-    .hero p { font-size: 1.1rem; opacity: .85; }
+    .hero {
+      background: linear-gradient(135deg, #1a1a2e 0%, #00BFA6 100%);
+      color: #fff;
+      padding: 2.5rem 0 2rem;
+      margin-bottom: 2rem;
+    }
+    .hero h1 { font-size: 2rem; font-weight: 700; letter-spacing: .04em; }
+    .hero p { font-size: 1rem; opacity: .85; }
+    .logo-circle {
+      width: 52px; height: 52px;
+      background: #1a1a2e;
+      border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      border: 2px solid rgba(255,255,255,.3);
+      flex-shrink: 0;
+    }
     .card { border: none; border-radius: 1rem; box-shadow: 0 2px 12px rgba(0,0,0,.08); }
     .drop-zone {
-      border: 2.5px dashed #2563eb;
+      border: 2.5px dashed #00BFA6;
       border-radius: .75rem;
       padding: 3rem 1rem;
       text-align: center;
-      background: #f8faff;
+      background: #f0fdf9;
       cursor: pointer;
       transition: background .2s, border-color .2s;
     }
-    .drop-zone.drag-over { background: #dbeafe; border-color: #1d4ed8; }
+    .drop-zone.drag-over { background: #ccfbf1; border-color: #00997D; }
     .drop-zone .icon { font-size: 3rem; margin-bottom: .75rem; }
     .drop-zone input[type="file"] { display: none; }
     #file-name { margin-top: .75rem; font-size: .95rem; color: #374151; }
-    .btn-primary { background: #2563eb; border-color: #2563eb; }
-    .btn-primary:hover { background: #1d4ed8; border-color: #1d4ed8; }
+    .btn-primary { background: #00BFA6; border-color: #00BFA6; }
+    .btn-primary:hover { background: #00997D; border-color: #00997D; }
+    .history-card .card-header {
+      background: #E0F7F3;
+      color: #00604f;
+      font-weight: 600;
+      border-bottom: 1px solid #b2ebf2;
+      border-radius: 1rem 1rem 0 0 !important;
+    }
+    .history-badge {
+      background: #00BFA6;
+      color: #fff;
+      border-radius: 999px;
+      padding: 1px 8px;
+      font-size: .75rem;
+      font-weight: 700;
+    }
+    .history-link { color: #00BFA6; text-decoration: none; }
+    .history-link:hover { color: #00997D; text-decoration: underline; }
+    .input-group-text { background: #E0F7F3; border-color: #b2ebf2; color: #00604f; }
+    .form-control:focus { border-color: #00BFA6; box-shadow: 0 0 0 .2rem rgba(0,191,166,.25); }
   </style>
 </head>
 <body>
 
-<div class="hero text-center">
-  <h1>📊 Sprint KPI Calculator</h1>
-  <p>Calculez les KPIs de votre sprint en quelques secondes</p>
+<div class="hero">
+  <div class="container d-flex align-items-center gap-3" style="max-width:680px;">
+    <div class="logo-circle">
+      <svg width="28" height="28" viewBox="0 0 28 28" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path d="M4 4L13 14L4 24H8.5L14 17.5L19.5 24H24L15 14L24 4H19.5L14 10.5L8.5 4H4Z" fill="#00BFA6"/>
+      </svg>
+    </div>
+    <div>
+      <h1 class="mb-0">SPRINT KPI DASHBOARD</h1>
+      <p class="mb-0">Calculez les KPIs de votre sprint en quelques secondes</p>
+    </div>
+  </div>
 </div>
 
 <div class="container" style="max-width: 680px;">
@@ -47,7 +88,7 @@
   {% endwith %}
 
   <div class="card p-4">
-    <h2 class="h5 mb-4 text-center">Importer le fichier Excel du sprint</h2>
+    <h2 class="h5 mb-4 text-center fw-semibold" style="color:#00604f;">Importer le fichier Excel du sprint</h2>
 
     <form method="post" action="/calculate" enctype="multipart/form-data" id="upload-form">
 
@@ -90,7 +131,43 @@
     </form>
   </div>
 
-  <div class="mt-4 text-center text-muted small">
+  <!-- Upload History -->
+  {% if history %}
+  <div class="card history-card mt-4 mb-2">
+    <div class="card-header d-flex align-items-center gap-2">
+      📂 Historique des fichiers
+      <span class="history-badge ms-1">{{ history | length }}</span>
+    </div>
+    <div class="card-body p-0">
+      <table class="table table-sm table-hover mb-0">
+        <thead>
+          <tr>
+            <th class="ps-3" style="font-size:.8rem;color:#6b7280;">FICHIER</th>
+            <th style="font-size:.8rem;color:#6b7280;">DATE</th>
+            <th style="font-size:.8rem;color:#6b7280;">CAPACITÉ</th>
+            <th style="font-size:.8rem;color:#6b7280;">RAPPORT</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for entry in history %}
+          <tr>
+            <td class="ps-3" style="font-size:.88rem;overflow-wrap:break-word;word-break:break-word;">{{ entry.filename }}</td>
+            <td style="font-size:.88rem;white-space:nowrap;">{{ entry.uploaded_at }}</td>
+            <td style="font-size:.88rem;">{{ entry.capacity }}h</td>
+            <td>
+              <a href="/download/{{ entry.report_filename }}" class="history-link" style="font-size:.85rem;">
+                ⬇️ Excel
+              </a>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+  {% endif %}
+
+  <div class="mt-2 mb-4 text-center text-muted small">
     <p>Le fichier sera traité localement — aucune donnée n'est envoyée à un serveur externe.</p>
   </div>
 </div>
