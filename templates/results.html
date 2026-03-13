@@ -58,7 +58,7 @@
       box-shadow: 0 4px 24px rgba(0,191,166,.25);
     }
     .hero-kpi-value { font-size: 4rem; font-weight: 900; line-height: 1; }
-    .hero-kpi-label { font-size: .85rem; letter-spacing: .1em; text-transform: uppercase; opacity: .85; margin-top: .4rem; }
+    .hero-kpi-label { font-size: .85rem; letter-spacing: .1em; opacity: .85; margin-top: .4rem; }
     .hero-kpi-sub { font-size: .95rem; opacity: .8; margin-top: .5rem; }
     .progress-hero { height: 10px; border-radius: 5px; background: rgba(255,255,255,.25); }
     .progress-hero .progress-bar { border-radius: 5px; background: #fff; }
@@ -71,13 +71,13 @@
       transition: transform .15s, box-shadow .15s;
       height: 100%;
       background: #fff;
+      cursor: help;
     }
     .kpi-card:hover { transform: translateY(-3px); box-shadow: 0 6px 20px rgba(0,0,0,.12); }
     .kpi-value { font-size: 2.5rem; font-weight: 900; line-height: 1; }
     .kpi-label {
       font-size: .78rem;
       color: #6b7280;
-      text-transform: uppercase;
       letter-spacing: .07em;
       margin-top: .35rem;
     }
@@ -89,6 +89,43 @@
     .color-red    { color: #dc2626; }
     .color-teal   { color: var(--nx-teal-dark); }
     .color-gray   { color: #6b7280; }
+
+    /* ── Sidebar ── */
+    .nx-sidebar {
+      position: sticky;
+      top: 1rem;
+      background: #fff;
+      border-radius: 1rem;
+      box-shadow: 0 2px 12px rgba(0,0,0,.07);
+      padding: 1rem 0;
+      min-width: 0;
+    }
+    .nx-sidebar-title {
+      font-size: .7rem;
+      font-weight: 700;
+      color: #9ca3af;
+      letter-spacing: .1em;
+      text-transform: uppercase;
+      padding: 0 1rem .5rem;
+    }
+    .nx-nav-item {
+      display: block;
+      width: 100%;
+      text-align: left;
+      background: none;
+      border: none;
+      padding: .6rem 1rem;
+      border-radius: 0;
+      font-size: .9rem;
+      color: #374151;
+      cursor: pointer;
+      transition: background .15s, color .15s;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .nx-nav-item:hover { background: var(--nx-teal-light); color: var(--nx-teal-dark); }
+    .nx-nav-item.active { background: var(--nx-teal-light); color: var(--nx-teal-dark); font-weight: 700; border-left: 3px solid var(--nx-teal); }
 
     /* ── Section / accordion cards ── */
     .section-card { border: none; border-radius: 1rem; box-shadow: 0 2px 12px rgba(0,0,0,.07); background: #fff; }
@@ -107,13 +144,17 @@
     .table th { background: #f8f9fa; font-size: .8rem; color: #374151; text-transform: uppercase; letter-spacing: .04em; }
     .table td { font-size: .87rem; vertical-align: middle; }
     .badge-count { font-size: .88rem; font-weight: 700; }
+
+    /* ── Pagination ── */
+    .nx-pagination { display: flex; align-items: center; gap: .5rem; padding: .75rem 1rem; font-size: .85rem; }
+    .nx-pagination .page-info { color: #6b7280; }
   </style>
 </head>
 <body>
 
 <!-- Top bar -->
 <div class="nx-topbar">
-  <div class="container-fluid d-flex align-items-center gap-3" style="max-width: 1200px;">
+  <div class="container-fluid d-flex align-items-center gap-3" style="max-width: 1400px;">
     <div class="nx-logo-circle">
       <svg viewBox="0 0 28 28" fill="none" xmlns="http://www.w3.org/2000/svg">
         <path d="M4 4L14 14M14 14L24 4M14 14L4 24M14 14L24 24" stroke="#00BFA6" stroke-width="3.5" stroke-linecap="round"/>
@@ -134,14 +175,17 @@
   </div>
 </div>
 
-<div class="container pb-5 pt-4" style="max-width: 1100px;">
+<div class="container-fluid pb-5 pt-4" style="max-width: 1400px;">
 
-  <!-- Hero card: Capacity Utilization -->
-  <div class="hero-kpi-card mb-4">
+  <!-- Hero card: Capacity Utilization — always visible -->
+  <div class="hero-kpi-card mb-4"
+       data-bs-toggle="tooltip"
+       data-bs-placement="bottom"
+       title="Total heures loguées / Capacité équipe × 100">
     <div class="row align-items-center">
       <div class="col-auto">
         <div class="hero-kpi-value">{{ kpis.capacity_util }}%</div>
-        <div class="hero-kpi-label">CAPACITY UTILIZATION</div>
+        <div class="hero-kpi-label">Capacity utilization</div>
         <div class="hero-kpi-sub">{{ kpis.total_logged_days }}j logués sur {{ kpis.capacity_days }}j</div>
       </div>
       <div class="col">
@@ -156,274 +200,392 @@
     </div>
   </div>
 
-  <!-- KPI Cards grid -->
-  <div class="row g-3 mb-4">
+  <!-- Sidebar + main content -->
+  <div class="row g-4 align-items-start">
 
-    <!-- Throughput -->
-    <div class="col-6 col-md-4 col-lg-3">
-      <div class="kpi-card card p-3 text-center">
-        <div class="kpi-icon">✅</div>
-        <div class="kpi-value color-green">{{ kpis.throughput }}</div>
-        <div class="kpi-label">THROUGHPUT (RÉSOLUS)</div>
+    <!-- ── Sidebar ── -->
+    <div class="col-12 col-md-3 col-lg-2">
+      <div class="nx-sidebar">
+        <div class="nx-sidebar-title">Navigation</div>
+        <button class="nx-nav-item active" data-section="overview" title="Vue d'ensemble">📊 Vue d'ensemble</button>
+        {% if wip_rows %}
+        <button class="nx-nav-item" data-section="wip" title="WIP End Sprint">🔄 WIP End Sprint</button>
+        {% endif %}
+        {% if no_est_rows %}
+        <button class="nx-nav-item" data-section="noest" title="Sans estimation">⚠️ Sans estimation</button>
+        {% endif %}
+        {% if no_tempo_rows %}
+        <button class="nx-nav-item" data-section="notempo" title="Sans tempo">⏱️ Sans tempo</button>
+        {% endif %}
+        {% if resolution_rows %}
+        <button class="nx-nav-item" data-section="resolution" title="Temps de résolution">⏳ Temps de résolution</button>
+        {% endif %}
       </div>
     </div>
 
-    <!-- WIP -->
-    <div class="col-6 col-md-4 col-lg-3">
-      <div class="kpi-card card p-3 text-center">
-        <div class="kpi-icon">🔄</div>
-        <div class="kpi-value
-          {% if kpis.wip_count == 0 %}color-green
-          {% elif kpis.wip_count <= 5 %}color-yellow
-          {% else %}color-red{% endif %}">
-          {{ kpis.wip_count }}
+    <!-- ── Main content ── -->
+    <div class="col-12 col-md-9 col-lg-10">
+
+      <!-- ══ Section: Vue d'ensemble ══ -->
+      <div id="section-overview" class="nx-section">
+
+        <!-- KPI Cards grid -->
+        <div class="row g-3 mb-4">
+
+          <!-- Throughput -->
+          <div class="col-6 col-md-4 col-xl-3">
+            <div class="kpi-card card p-3 text-center"
+                 data-bs-toggle="tooltip"
+                 data-bs-placement="top"
+                 title="Nombre de tickets résolus (status : closed, done, released, customer pending)">
+              <div class="kpi-icon">✅</div>
+              <div class="kpi-value color-green">{{ kpis.throughput }}</div>
+              <div class="kpi-label">Throughput (résolus)</div>
+            </div>
+          </div>
+
+          <!-- WIP -->
+          <div class="col-6 col-md-4 col-xl-3">
+            <div class="kpi-card card p-3 text-center"
+                 data-bs-toggle="tooltip"
+                 data-bs-placement="top"
+                 title="Nombre de tickets encore en cours à la fin du sprint (status : In Progress, In Review, etc.)">
+              <div class="kpi-icon">🔄</div>
+              <div class="kpi-value
+                {% if kpis.wip_count == 0 %}color-green
+                {% elif kpis.wip_count <= 5 %}color-yellow
+                {% else %}color-red{% endif %}">
+                {{ kpis.wip_count }}
+              </div>
+              <div class="kpi-label">Wip end sprint</div>
+            </div>
+          </div>
+
+          <!-- Sans Estimation -->
+          <div class="col-6 col-md-4 col-xl-3">
+            <div class="kpi-card card p-3 text-center"
+                 data-bs-toggle="tooltip"
+                 data-bs-placement="top"
+                 title="Nombre de tickets sans estimation d'effort (Original Estimate vide ou 0)">
+              <div class="kpi-icon">⚠️</div>
+              <div class="kpi-value
+                {% if kpis.no_est_count == 0 %}color-green
+                {% elif kpis.no_est_count <= 3 %}color-yellow
+                {% else %}color-red{% endif %}">
+                {{ kpis.no_est_count }}
+              </div>
+              <div class="kpi-label">Sans estimation</div>
+            </div>
+          </div>
+
+          <!-- Sans Tempo -->
+          <div class="col-6 col-md-4 col-xl-3">
+            <div class="kpi-card card p-3 text-center"
+                 data-bs-toggle="tooltip"
+                 data-bs-placement="top"
+                 title="Nombre de tickets sans worklog Tempo associé">
+              <div class="kpi-icon">⏱️</div>
+              <div class="kpi-value
+                {% if kpis.no_tempo_count == 0 %}color-green
+                {% elif kpis.no_tempo_count <= 3 %}color-yellow
+                {% else %}color-red{% endif %}">
+                {{ kpis.no_tempo_count }}
+              </div>
+              <div class="kpi-label">Sans tempo</div>
+            </div>
+          </div>
+
+          <!-- Jours logués -->
+          <div class="col-6 col-md-4 col-xl-3">
+            <div class="kpi-card card p-3 text-center"
+                 data-bs-toggle="tooltip"
+                 data-bs-placement="top"
+                 title="Somme des heures Tempo / 8">
+              <div class="kpi-icon">⏰</div>
+              <div class="kpi-value color-teal">{{ kpis.total_logged_days }}</div>
+              <div class="kpi-label">Jours logués (j)</div>
+            </div>
+          </div>
+
+          <!-- Temps moyen de résolution -->
+          {% if kpis.avg_resolution_days is not none %}
+          <div class="col-6 col-md-4 col-xl-3">
+            <div class="kpi-card card p-3 text-center"
+                 data-bs-toggle="tooltip"
+                 data-bs-placement="top"
+                 title="Moyenne de (Date résolution - Date 1er worklog Tempo) en jours">
+              <div class="kpi-icon">⏳</div>
+              <div class="kpi-value
+                {% if kpis.avg_resolution_days <= 5 %}color-green
+                {% elif kpis.avg_resolution_days <= 15 %}color-yellow
+                {% else %}color-red{% endif %}">
+                {{ kpis.avg_resolution_days }}j
+              </div>
+              <div class="kpi-label">Temps moyen de résolution</div>
+            </div>
+          </div>
+          {% endif %}
+
+        </div><!-- /row g-3 -->
+
+        <!-- Temps passé par projet -->
+        {% if project_rows %}
+        <div class="section-card card mb-4">
+          <div class="card-header d-flex align-items-center gap-2" data-bs-toggle="collapse" data-bs-target="#tbl-projects" aria-expanded="true">
+            <span class="chevron">▼</span>
+            📂 Temps passé par projet
+            <span class="badge ms-1 badge-count" style="background:var(--nx-teal);">{{ project_rows | length }}</span>
+          </div>
+          <div id="tbl-projects" class="collapse show">
+            <div class="card-body p-0">
+              <div class="table-responsive">
+                <table class="table table-sm table-hover mb-0">
+                  <thead>
+                    <tr>
+                      <th>Projet</th>
+                      <th>Heures</th>
+                      <th>Jours</th>
+                      <th>% du total</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {% for row in project_rows %}
+                    <tr>
+                      <td><strong>{{ row.Projet }}</strong></td>
+                      <td>{{ row.Heures }}</td>
+                      <td>{{ row.Jours }}</td>
+                      <td>
+                        <div class="d-flex align-items-center gap-2">
+                          <div class="progress flex-grow-1" style="height:6px;">
+                            <div class="progress-bar" role="progressbar" aria-valuenow="{{ row['% du total'] }}" aria-valuemin="0" aria-valuemax="100" style="width:{{ row['% du total'] }}%; background:var(--nx-teal);"></div>
+                          </div>
+                          <span style="min-width:3rem; text-align:right;">{{ row['% du total'] }}%</span>
+                        </div>
+                      </td>
+                    </tr>
+                    {% endfor %}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
         </div>
-        <div class="kpi-label">WIP END SPRINT</div>
-      </div>
-    </div>
+        {% endif %}
 
-    <!-- Sans Estimation -->
-    <div class="col-6 col-md-4 col-lg-3">
-      <div class="kpi-card card p-3 text-center">
-        <div class="kpi-icon">⚠️</div>
-        <div class="kpi-value
-          {% if kpis.no_est_count == 0 %}color-green
-          {% elif kpis.no_est_count <= 3 %}color-yellow
-          {% else %}color-red{% endif %}">
-          {{ kpis.no_est_count }}
-        </div>
-        <div class="kpi-label">SANS ESTIMATION</div>
-      </div>
-    </div>
+      </div><!-- /section-overview -->
 
-    <!-- Sans Tempo -->
-    <div class="col-6 col-md-4 col-lg-3">
-      <div class="kpi-card card p-3 text-center">
-        <div class="kpi-icon">⏱️</div>
-        <div class="kpi-value
-          {% if kpis.no_tempo_count == 0 %}color-green
-          {% elif kpis.no_tempo_count <= 3 %}color-yellow
-          {% else %}color-red{% endif %}">
-          {{ kpis.no_tempo_count }}
-        </div>
-        <div class="kpi-label">SANS TEMPO</div>
-      </div>
-    </div>
-
-    <!-- Jours logués -->
-    <div class="col-6 col-md-4 col-lg-3">
-      <div class="kpi-card card p-3 text-center">
-        <div class="kpi-icon">⏰</div>
-        <div class="kpi-value color-teal">{{ kpis.total_logged_days }}</div>
-        <div class="kpi-label">JOURS LOGUÉS (J)</div>
-      </div>
-    </div>
-
-    <!-- Temps moyen de résolution -->
-    {% if kpis.avg_resolution_days is not none %}
-    <div class="col-6 col-md-4 col-lg-3">
-      <div class="kpi-card card p-3 text-center">
-        <div class="kpi-icon">⏳</div>
-        <div class="kpi-value
-          {% if kpis.avg_resolution_days <= 5 %}color-green
-          {% elif kpis.avg_resolution_days <= 15 %}color-yellow
-          {% else %}color-red{% endif %}">
-          {{ kpis.avg_resolution_days }}j
-        </div>
-        <div class="kpi-label">TEMPS MOYEN DE RÉSOLUTION</div>
-      </div>
-    </div>
-    {% endif %}
-
-  </div>
-
-  <!-- Temps passé par projet -->
-  {% if project_rows %}
-  <div class="section-card card mb-4">
-    <div class="card-header d-flex align-items-center gap-2" data-bs-toggle="collapse" data-bs-target="#tbl-projects" aria-expanded="true">
-      <span class="chevron">▼</span>
-      📂 Temps passé par projet
-      <span class="badge ms-1 badge-count" style="background:var(--nx-teal);">{{ project_rows | length }}</span>
-    </div>
-    <div id="tbl-projects" class="collapse show">
-      <div class="card-body p-0">
-        <div class="table-responsive">
-          <table class="table table-sm table-hover mb-0">
-            <thead>
-              <tr>
-                <th>Projet</th>
-                <th>Heures</th>
-                <th>Jours</th>
-                <th>% du total</th>
-              </tr>
-            </thead>
-            <tbody>
-              {% for row in project_rows %}
-              <tr>
-                <td><strong>{{ row.Projet }}</strong></td>
-                <td>{{ row.Heures }}</td>
-                <td>{{ row.Jours }}</td>
-                <td>
-                  <div class="d-flex align-items-center gap-2">
-                    <div class="progress flex-grow-1" style="height:6px;">
-                      <div class="progress-bar" role="progressbar" aria-valuenow="{{ row['% du total'] }}" aria-valuemin="0" aria-valuemax="100" style="width:{{ row['% du total'] }}%; background:var(--nx-teal);"></div>
-                    </div>
-                    <span style="min-width:3rem; text-align:right;">{{ row['% du total'] }}%</span>
-                  </div>
-                </td>
-              </tr>
-              {% endfor %}
-            </tbody>
-          </table>
-        </div>
-      </div>
-    </div>
-  </div>
-  {% endif %}
-
-  <!-- Detail tables (accordion / collapsible) -->
-
-  {% if wip_rows %}
-  <div class="section-card card mb-3">
-    <div class="card-header d-flex align-items-center gap-2" data-bs-toggle="collapse" data-bs-target="#tbl-wip" aria-expanded="true">
-      <span class="chevron">▼</span>
-      🔄 WIP End Sprint
-      <span class="badge ms-1 badge-count bg-secondary">{{ wip_rows | length }}</span>
-    </div>
-    <div id="tbl-wip" class="collapse show">
-      <div class="card-body p-0">
-        <div class="table-responsive">
-          <table class="table table-sm table-hover mb-0">
-            <thead>
-              <tr>
-                {% for col in wip_rows[0].keys() %}
-                <th>{{ col }}</th>
-                {% endfor %}
-              </tr>
-            </thead>
-            <tbody>
-              {% for row in wip_rows %}
-              <tr>
-                {% for val in row.values() %}
-                <td>{{ val }}</td>
-                {% endfor %}
-              </tr>
-              {% endfor %}
-            </tbody>
-          </table>
-        </div>
-      </div>
-    </div>
-  </div>
-  {% endif %}
-
-  {% if no_est_rows %}
-  <div class="section-card card mb-3">
-    <div class="card-header d-flex align-items-center gap-2" data-bs-toggle="collapse" data-bs-target="#tbl-noest" aria-expanded="true">
-      <span class="chevron">▼</span>
-      ⚠️ Tickets sans estimation
-      <span class="badge ms-1 badge-count bg-danger">{{ no_est_rows | length }}</span>
-    </div>
-    <div id="tbl-noest" class="collapse show">
-      <div class="card-body p-0">
-        <div class="table-responsive">
-          <table class="table table-sm table-hover mb-0">
-            <thead>
-              <tr>
-                {% for col in no_est_rows[0].keys() %}
-                <th>{{ col }}</th>
-                {% endfor %}
-              </tr>
-            </thead>
-            <tbody>
-              {% for row in no_est_rows %}
-              <tr>
-                {% for val in row.values() %}
-                <td>{{ val }}</td>
-                {% endfor %}
-              </tr>
-              {% endfor %}
-            </tbody>
-          </table>
-        </div>
-      </div>
-    </div>
-  </div>
-  {% endif %}
-
-  {% if no_tempo_rows %}
-  <div class="section-card card mb-3">
-    <div class="card-header d-flex align-items-center gap-2" data-bs-toggle="collapse" data-bs-target="#tbl-notempo" aria-expanded="true">
-      <span class="chevron">▼</span>
-      ⏱️ Tickets sans tempo (sans worklog)
-      <span class="badge ms-1 badge-count bg-danger">{{ no_tempo_rows | length }}</span>
-    </div>
-    <div id="tbl-notempo" class="collapse show">
-      <div class="card-body p-0">
-        <div class="table-responsive">
-          <table class="table table-sm table-hover mb-0">
-            <thead>
-              <tr>
-                {% for col in no_tempo_rows[0].keys() %}
-                <th>{{ col }}</th>
-                {% endfor %}
-              </tr>
-            </thead>
-            <tbody>
-              {% for row in no_tempo_rows %}
-              <tr>
-                {% for val in row.values() %}
-                <td>{{ val }}</td>
-                {% endfor %}
-              </tr>
-              {% endfor %}
-            </tbody>
-          </table>
+      <!-- ══ Section: WIP ══ -->
+      {% if wip_rows %}
+      <div id="section-wip" class="nx-section d-none">
+        <div class="section-card card mb-3">
+          <div class="card-header d-flex align-items-center gap-2">
+            🔄 WIP End Sprint
+            <span class="badge ms-1 badge-count bg-secondary">{{ wip_rows | length }}</span>
+          </div>
+          <div class="card-body p-0">
+            <div class="table-responsive">
+              <table class="table table-sm table-hover mb-0" id="table-wip">
+                <thead>
+                  <tr>
+                    {% for col in wip_rows[0].keys() %}
+                    <th>{{ col }}</th>
+                    {% endfor %}
+                  </tr>
+                </thead>
+                <tbody>
+                  {% for row in wip_rows %}
+                  <tr>
+                    {% for val in row.values() %}
+                    <td>{{ val }}</td>
+                    {% endfor %}
+                  </tr>
+                  {% endfor %}
+                </tbody>
+              </table>
+            </div>
+            <div class="nx-pagination" id="pag-wip"></div>
+          </div>
         </div>
       </div>
-    </div>
-  </div>
-  {% endif %}
+      {% endif %}
 
-  {% if resolution_rows %}
-  <div class="section-card card mb-3">
-    <div class="card-header d-flex align-items-center gap-2" data-bs-toggle="collapse" data-bs-target="#tbl-resolution" aria-expanded="true">
-      <span class="chevron">▼</span>
-      ⏳ Temps de résolution par ticket
-      <span class="badge ms-1 badge-count" style="background:var(--nx-teal);">{{ resolution_rows | length }}</span>
-    </div>
-    <div id="tbl-resolution" class="collapse show">
-      <div class="card-body p-0">
-        <div class="table-responsive">
-          <table class="table table-sm table-hover mb-0">
-            <thead>
-              <tr>
-                {% for col in resolution_rows[0].keys() %}
-                <th>{{ col }}</th>
-                {% endfor %}
-              </tr>
-            </thead>
-            <tbody>
-              {% for row in resolution_rows %}
-              <tr>
-                {% for val in row.values() %}
-                <td>{{ val }}</td>
-                {% endfor %}
-              </tr>
-              {% endfor %}
-            </tbody>
-          </table>
+      <!-- ══ Section: Sans estimation ══ -->
+      {% if no_est_rows %}
+      <div id="section-noest" class="nx-section d-none">
+        <div class="section-card card mb-3">
+          <div class="card-header d-flex align-items-center gap-2">
+            ⚠️ Tickets sans estimation
+            <span class="badge ms-1 badge-count bg-danger">{{ no_est_rows | length }}</span>
+          </div>
+          <div class="card-body p-0">
+            <div class="table-responsive">
+              <table class="table table-sm table-hover mb-0" id="table-noest">
+                <thead>
+                  <tr>
+                    {% for col in no_est_rows[0].keys() %}
+                    <th>{{ col }}</th>
+                    {% endfor %}
+                  </tr>
+                </thead>
+                <tbody>
+                  {% for row in no_est_rows %}
+                  <tr>
+                    {% for val in row.values() %}
+                    <td>{{ val }}</td>
+                    {% endfor %}
+                  </tr>
+                  {% endfor %}
+                </tbody>
+              </table>
+            </div>
+            <div class="nx-pagination" id="pag-noest"></div>
+          </div>
         </div>
       </div>
-    </div>
-  </div>
-  {% endif %}
+      {% endif %}
 
-</div>
+      <!-- ══ Section: Sans tempo ══ -->
+      {% if no_tempo_rows %}
+      <div id="section-notempo" class="nx-section d-none">
+        <div class="section-card card mb-3">
+          <div class="card-header d-flex align-items-center gap-2">
+            ⏱️ Tickets sans tempo (sans worklog)
+            <span class="badge ms-1 badge-count bg-danger">{{ no_tempo_rows | length }}</span>
+          </div>
+          <div class="card-body p-0">
+            <div class="table-responsive">
+              <table class="table table-sm table-hover mb-0" id="table-notempo">
+                <thead>
+                  <tr>
+                    {% for col in no_tempo_rows[0].keys() %}
+                    <th>{{ col }}</th>
+                    {% endfor %}
+                  </tr>
+                </thead>
+                <tbody>
+                  {% for row in no_tempo_rows %}
+                  <tr>
+                    {% for val in row.values() %}
+                    <td>{{ val }}</td>
+                    {% endfor %}
+                  </tr>
+                  {% endfor %}
+                </tbody>
+              </table>
+            </div>
+            <div class="nx-pagination" id="pag-notempo"></div>
+          </div>
+        </div>
+      </div>
+      {% endif %}
+
+      <!-- ══ Section: Temps de résolution ══ -->
+      {% if resolution_rows %}
+      <div id="section-resolution" class="nx-section d-none">
+        <div class="section-card card mb-3">
+          <div class="card-header d-flex align-items-center gap-2">
+            ⏳ Temps de résolution par ticket
+            <span class="badge ms-1 badge-count" style="background:var(--nx-teal);">{{ resolution_rows | length }}</span>
+          </div>
+          <div class="card-body p-0">
+            <div class="table-responsive">
+              <table class="table table-sm table-hover mb-0" id="table-resolution">
+                <thead>
+                  <tr>
+                    {% for col in resolution_rows[0].keys() %}
+                    <th>{{ col }}</th>
+                    {% endfor %}
+                  </tr>
+                </thead>
+                <tbody>
+                  {% for row in resolution_rows %}
+                  <tr>
+                    {% for val in row.values() %}
+                    <td>{{ val }}</td>
+                    {% endfor %}
+                  </tr>
+                  {% endfor %}
+                </tbody>
+              </table>
+            </div>
+            <div class="nx-pagination" id="pag-resolution"></div>
+          </div>
+        </div>
+      </div>
+      {% endif %}
+
+    </div><!-- /col main content -->
+  </div><!-- /row -->
+</div><!-- /container -->
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-YvpcrYf0tY3lHB60NNkmXc4s9bIOgUxi8T/jzmq0oWnOFvYqbsGH5vxsVLXuLVrJ" crossorigin="anonymous"></script>
 <script>
-  // Rotate chevron icons when accordion toggles
+  // ── Bootstrap tooltips ──
+  document.querySelectorAll('[data-bs-toggle="tooltip"]').forEach(function (el) {
+    new bootstrap.Tooltip(el);
+  });
+
+  // ── Sidebar navigation ──
+  document.querySelectorAll('.nx-nav-item').forEach(function (btn) {
+    btn.addEventListener('click', function () {
+      // Update active state
+      document.querySelectorAll('.nx-nav-item').forEach(function (b) { b.classList.remove('active'); });
+      btn.classList.add('active');
+
+      // Show matching section, hide others
+      var target = btn.dataset.section;
+      document.querySelectorAll('.nx-section').forEach(function (sec) {
+        if (sec.id === 'section-' + target) {
+          sec.classList.remove('d-none');
+        } else {
+          sec.classList.add('d-none');
+        }
+      });
+    });
+  });
+
+  // ── Client-side pagination ──
+  var PAGE_SIZE = 10;
+
+  function initPagination(tableId, pagId) {
+    var table = document.getElementById(tableId);
+    if (!table) return;
+    var rows = Array.from(table.querySelectorAll('tbody tr'));
+    if (rows.length <= PAGE_SIZE) return; // no pagination needed
+
+    var totalPages = Math.ceil(rows.length / PAGE_SIZE);
+    var currentPage = 1;
+
+    function renderPage(page) {
+      rows.forEach(function (row, i) {
+        row.style.display = (i >= (page - 1) * PAGE_SIZE && i < page * PAGE_SIZE) ? '' : 'none';
+      });
+      var pag = document.getElementById(pagId);
+      pag.innerHTML =
+        '<button class="btn btn-sm btn-outline-secondary" id="' + pagId + '-prev">◀ Précédent</button>' +
+        '<span class="page-info mx-2">Page ' + page + ' / ' + totalPages + '</span>' +
+        '<button class="btn btn-sm btn-outline-secondary" id="' + pagId + '-next">Suivant ▶</button>';
+      document.getElementById(pagId + '-prev').disabled = page === 1;
+      document.getElementById(pagId + '-prev').setAttribute('aria-disabled', page === 1 ? 'true' : 'false');
+      document.getElementById(pagId + '-next').disabled = page === totalPages;
+      document.getElementById(pagId + '-next').setAttribute('aria-disabled', page === totalPages ? 'true' : 'false');
+      document.getElementById(pagId + '-prev').addEventListener('click', function () {
+        if (currentPage > 1) { currentPage--; renderPage(currentPage); }
+      });
+      document.getElementById(pagId + '-next').addEventListener('click', function () {
+        if (currentPage < totalPages) { currentPage++; renderPage(currentPage); }
+      });
+    }
+
+    renderPage(currentPage);
+  }
+
+  initPagination('table-wip', 'pag-wip');
+  initPagination('table-noest', 'pag-noest');
+  initPagination('table-notempo', 'pag-notempo');
+  initPagination('table-resolution', 'pag-resolution');
+
+  // ── Accordion chevron rotation ──
   document.querySelectorAll('[data-bs-toggle="collapse"]').forEach(header => {
     const target = document.querySelector(header.dataset.bsTarget);
     if (!target) return;
