@@ -498,8 +498,10 @@ def calc_time_per_project(df_worklog, df_end=None, key_col_end=None):
     Optionally joins with df_end to include Priority per ticket.
 
     Returns:
-        DataFrame with columns: Projet, [Priorité,] Heures, Jours, % du total
-        Sorted by Projet ascending, then Jours descending within each project.
+        tuple of (totals_df, by_priority_df):
+        - totals_df: DataFrame with columns: Projet, Heures, Jours, % du total
+        - by_priority_df: DataFrame with columns: Projet, Priorité, Heures, Jours, % du total
+        Both sorted by Projet ascending, then Jours descending within each project.
     """
     key_col = find_column(df_worklog, [
         "Issue Key", "Issue key", "issue key", "ISSUE KEY",
@@ -510,14 +512,24 @@ def calc_time_per_project(df_worklog, df_end=None, key_col_end=None):
     ])
 
     if key_col is None or hours_col is None:
-        return pd.DataFrame()
+        return pd.DataFrame(), pd.DataFrame()
 
     df = df_worklog[[key_col, hours_col]].copy()
     df[hours_col] = pd.to_numeric(df[hours_col], errors="coerce").fillna(0)
     df["Projet"] = df[key_col].astype(str).str.extract(r"^([A-Z][A-Z0-9]*)-", expand=False)
     df = df.dropna(subset=["Projet"])
 
-    # Try to join with df_end to get Priority
+    # 1. Calculate totals per project (no priority breakdown)
+    totals = df.groupby("Projet")[hours_col].sum().reset_index()
+    totals.columns = ["Projet", "Heures"]
+    total_hours = totals["Heures"].sum()
+    totals["Jours"] = (totals["Heures"] / HOURS_PER_DAY).round(2)
+    totals["% du total"] = (
+        (totals["Heures"] / total_hours * 100).round(2) if total_hours > 0 else 0
+    )
+    totals = totals.sort_values("Jours", ascending=False).reset_index(drop=True)
+
+    # 2. Try to join with df_end to get Priority for breakdown
     priority_col = None
     if df_end is not None and key_col_end is not None:
         priority_col = find_column(df_end, ["Priority", "priority", "PRIORITY", "Priorité", "priorité"])
@@ -527,30 +539,31 @@ def calc_time_per_project(df_worklog, df_end=None, key_col_end=None):
         prio_df = prio_df.rename(columns={key_col_end: "_join_key", priority_col: "Priorité"})
         prio_df["_join_key"] = prio_df["_join_key"].astype(str).str.strip()
         df["_join_key"] = df[key_col].astype(str).str.strip()
-        df = df.merge(prio_df, on="_join_key", how="left")
-        df["Priorité"] = df["Priorité"].fillna("Unknown")
-        df = df.drop(columns=["_join_key"])
+        df_with_prio = df.merge(prio_df, on="_join_key", how="left")
+        df_with_prio["Priorité"] = df_with_prio["Priorité"].fillna("Unknown")
+        df_with_prio = df_with_prio.drop(columns=["_join_key"])
 
-        grouped = df.groupby(["Projet", "Priorité"])[hours_col].sum().reset_index()
-        grouped.columns = ["Projet", "Priorité", "Heures"]
-    else:
-        grouped = df.groupby("Projet")[hours_col].sum().reset_index()
-        grouped.columns = ["Projet", "Heures"]
-
-    total_hours = grouped["Heures"].sum()
-    grouped["Jours"] = (grouped["Heures"] / HOURS_PER_DAY).round(2)
-    grouped["% du total"] = (
-        (grouped["Heures"] / total_hours * 100).round(1) if total_hours > 0 else 0
-    )
-
-    if priority_col is not None:
-        grouped = grouped.sort_values(
-            ["Projet", "Jours"], ascending=[True, False]
+        by_priority = df_with_prio.groupby(["Projet", "Priorité"])[hours_col].sum().reset_index()
+        by_priority.columns = ["Projet", "Priorité", "Heures"]
+        by_priority["Jours"] = (by_priority["Heures"] / HOURS_PER_DAY).round(2)
+        by_priority["% du total"] = (
+            (by_priority["Heures"] / total_hours * 100).round(2) if total_hours > 0 else 0
+        )
+        
+        # Sort by Projet, then by priority order
+        priority_order = {
+            "blocker": 0, "critical": 1, "high": 2, "medium": 3, 
+            "low": 4, "minor": 5, "trivial": 6, "unknown": 99
+        }
+        by_priority["_prio_sort"] = by_priority["Priorité"].astype(str).str.lower().map(priority_order).fillna(99)
+        by_priority = by_priority.sort_values(
+            ["Projet", "_prio_sort"], ascending=[True, True]
         ).reset_index(drop=True)
+        by_priority = by_priority.drop(columns=["_prio_sort"])
     else:
-        grouped = grouped.sort_values("Jours", ascending=False).reset_index(drop=True)
+        by_priority = pd.DataFrame()
 
-    return grouped
+    return totals, by_priority
 
 
 def get_capacity_input():
