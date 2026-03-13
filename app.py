@@ -231,7 +231,8 @@ def calculate():
 
     # Save uploaded file with a unique name
     unique_id = uuid.uuid4().hex
-    original_ext = file.filename.rsplit(".", 1)[1].lower()
+    original_filename = file.filename
+    original_ext = original_filename.rsplit(".", 1)[1].lower()
     saved_filename = f"{unique_id}.{original_ext}"
     filepath = os.path.join(UPLOAD_FOLDER, saved_filename)
     file.save(filepath)
@@ -317,8 +318,8 @@ def calculate():
 
     # Save to upload history
     save_history({
-        "filename": file.filename,
-        "uploaded_at": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+        "filename": original_filename,
+        "uploaded_at": datetime.now().strftime("%Y-%m-%d %H:%M"),
         "capacity": capacity_hours,
         "report_filename": report_filename,
     })

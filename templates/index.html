@@ -3,78 +3,92 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Sprint KPI Dashboard</title>
+  <title>Sprint KPI Calculator — NeoXam</title>
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous" />
   <style>
+    :root {
+      --nx-teal: #00BFA6;
+      --nx-teal-dark: #00997D;
+      --nx-teal-light: #E0F7F3;
+      --nx-dark: #1a1a2e;
+    }
     body { background: #f0f4f8; }
-    .hero {
-      background: linear-gradient(135deg, #1a1a2e 0%, #00BFA6 100%);
+    /* Header */
+    .nx-header {
+      background: linear-gradient(135deg, var(--nx-dark) 0%, var(--nx-teal) 100%);
       color: #fff;
-      padding: 2.5rem 0 2rem;
+      padding: 2rem 0 1.5rem;
       margin-bottom: 2rem;
     }
-    .hero h1 { font-size: 2rem; font-weight: 700; letter-spacing: .04em; }
-    .hero p { font-size: 1rem; opacity: .85; }
-    .logo-circle {
+    .nx-logo-circle {
       width: 52px; height: 52px;
-      background: #1a1a2e;
+      background: var(--nx-dark);
       border-radius: 50%;
-      display: flex; align-items: center; justify-content: center;
-      border: 2px solid rgba(255,255,255,.3);
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      margin-right: .75rem;
       flex-shrink: 0;
     }
+    .nx-logo-circle svg { width: 28px; height: 28px; }
+    .nx-title { font-size: 1.7rem; font-weight: 800; letter-spacing: .06em; margin: 0; }
+    .nx-subtitle { font-size: .95rem; opacity: .85; margin: 0; }
+    /* Cards */
     .card { border: none; border-radius: 1rem; box-shadow: 0 2px 12px rgba(0,0,0,.08); }
+    /* Drop zone */
     .drop-zone {
-      border: 2.5px dashed #00BFA6;
+      border: 2.5px dashed var(--nx-teal);
       border-radius: .75rem;
       padding: 3rem 1rem;
       text-align: center;
-      background: #f0fdf9;
+      background: var(--nx-teal-light);
       cursor: pointer;
       transition: background .2s, border-color .2s;
     }
-    .drop-zone.drag-over { background: #ccfbf1; border-color: #00997D; }
+    .drop-zone.drag-over { background: #b2ede6; border-color: var(--nx-teal-dark); }
     .drop-zone .icon { font-size: 3rem; margin-bottom: .75rem; }
     .drop-zone input[type="file"] { display: none; }
     #file-name { margin-top: .75rem; font-size: .95rem; color: #374151; }
-    .btn-primary { background: #00BFA6; border-color: #00BFA6; }
-    .btn-primary:hover { background: #00997D; border-color: #00997D; }
+    /* Buttons */
+    .btn-primary { background: var(--nx-teal); border-color: var(--nx-teal); color: #fff; }
+    .btn-primary:hover { background: var(--nx-teal-dark); border-color: var(--nx-teal-dark); color: #fff; }
+    /* History table */
     .history-card .card-header {
-      background: #E0F7F3;
-      color: #00604f;
-      font-weight: 600;
-      border-bottom: 1px solid #b2ebf2;
-      border-radius: 1rem 1rem 0 0 !important;
+      background: var(--nx-teal-light);
+      color: var(--nx-teal-dark);
+      font-weight: 700;
+      font-size: .9rem;
+      letter-spacing: .04em;
+      text-transform: uppercase;
+      border-bottom: 1px solid #c5ebe4;
     }
     .history-badge {
-      background: #00BFA6;
+      background: var(--nx-teal);
       color: #fff;
-      border-radius: 999px;
-      padding: 1px 8px;
       font-size: .75rem;
-      font-weight: 700;
+      border-radius: .5rem;
+      padding: .15rem .5rem;
     }
-    .history-link { color: #00BFA6; text-decoration: none; }
-    .history-link:hover { color: #00997D; text-decoration: underline; }
-    .input-group-text { background: #E0F7F3; border-color: #b2ebf2; color: #00604f; }
-    .form-control:focus { border-color: #00BFA6; box-shadow: 0 0 0 .2rem rgba(0,191,166,.25); }
+    .history-link { color: var(--nx-teal-dark); text-decoration: none; font-weight: 600; }
+    .history-link:hover { color: var(--nx-teal); text-decoration: underline; }
   </style>
 </head>
 <body>
 
-<div class="hero">
-  <div class="container d-flex align-items-center gap-3" style="max-width:680px;">
-    <div class="logo-circle">
-      <svg width="28" height="28" viewBox="0 0 28 28" fill="none" xmlns="http://www.w3.org/2000/svg">
-        <path d="M4 4L13 14L4 24H8.5L14 17.5L19.5 24H24L15 14L24 4H19.5L14 10.5L8.5 4H4Z" fill="#00BFA6"/>
+<header class="nx-header">
+  <div class="container d-flex align-items-center justify-content-center" style="max-width: 680px;">
+    <div class="nx-logo-circle">
+      <!-- NeoXam X icon in teal -->
+      <svg viewBox="0 0 28 28" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path d="M4 4L14 14M14 14L24 4M14 14L4 24M14 14L24 24" stroke="#00BFA6" stroke-width="3.5" stroke-linecap="round"/>
       </svg>
     </div>
     <div>
-      <h1 class="mb-0">SPRINT KPI DASHBOARD</h1>
-      <p class="mb-0">Calculez les KPIs de votre sprint en quelques secondes</p>
+      <p class="nx-title">SPRINT KPI DASHBOARD</p>
+      <p class="nx-subtitle">Calculez les KPIs de votre sprint en quelques secondes</p>
     </div>
   </div>
-</div>
+</header>
 
 <div class="container" style="max-width: 680px;">
 
@@ -87,8 +101,8 @@
     {% endfor %}
   {% endwith %}
 
-  <div class="card p-4">
-    <h2 class="h5 mb-4 text-center fw-semibold" style="color:#00604f;">Importer le fichier Excel du sprint</h2>
+  <div class="card p-4 mb-4">
+    <h2 class="h5 mb-4 text-center fw-bold" style="color: var(--nx-dark);">Importer le fichier Excel du sprint</h2>
 
     <form method="post" action="/calculate" enctype="multipart/form-data" id="upload-form">
 
@@ -133,7 +147,7 @@
 
   <!-- Upload History -->
   {% if history %}
-  <div class="card history-card mt-4 mb-2">
+  <div class="card history-card mb-4">
     <div class="card-header d-flex align-items-center gap-2">
       📂 Historique des fichiers
       <span class="history-badge ms-1">{{ history | length }}</span>
@@ -151,7 +165,7 @@
         <tbody>
           {% for entry in history %}
           <tr>
-            <td class="ps-3" style="font-size:.88rem;overflow-wrap:break-word;word-break:break-word;">{{ entry.filename }}</td>
+            <td class="ps-3" style="font-size:.88rem;word-break:break-all;">{{ entry.filename }}</td>
             <td style="font-size:.88rem;white-space:nowrap;">{{ entry.uploaded_at }}</td>
             <td style="font-size:.88rem;">{{ entry.capacity }}h</td>
             <td>
