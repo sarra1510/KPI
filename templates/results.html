@@ -172,6 +172,12 @@
       color: #fff; 
       transform: translateY(-1px);
     }
+    .nx-table-index-item:focus-visible {
+      background: var(--nx-teal);
+      color: #fff;
+      outline: 2px solid var(--nx-teal-dark);
+      outline-offset: 2px;
+    }
     .nx-table-index-item .badge {
       background: var(--nx-teal-dark);
       color: #fff;
@@ -300,42 +306,42 @@
 
   <!-- Table Reference Index -->
   <div class="nx-table-index" id="table-ref-index">
-    <div class="nx-table-index-title"><i class="bi bi-list-ul"></i> Index des tableaux</div>
+    <div class="nx-table-index-title"><i class="bi bi-list-ul" aria-hidden="true"></i> Index des tableaux</div>
     <ul class="nx-table-index-list">
       {% if project_totals_rows %}
       <li><a href="#tbl-anchor-projects-totals" class="nx-table-index-item">
-        <i class="bi bi-folder"></i> Temps par projet
-        <span class="badge">{{ project_totals_rows | length }}</span>
+        <i class="bi bi-folder" aria-hidden="true"></i> Temps par projet
+        <span class="badge" aria-label="{{ project_totals_rows | length }} lignes">{{ project_totals_rows | length }}</span>
       </a></li>
       {% endif %}
       {% if project_priority_rows %}
       <li><a href="#tbl-anchor-projects-priority" class="nx-table-index-item">
-        <i class="bi bi-bar-chart"></i> Projet & priorité
-        <span class="badge">{{ project_priority_rows | length }}</span>
+        <i class="bi bi-bar-chart" aria-hidden="true"></i> Projet & priorité
+        <span class="badge" aria-label="{{ project_priority_rows | length }} lignes">{{ project_priority_rows | length }}</span>
       </a></li>
       {% endif %}
       {% if wip_rows %}
       <li><a href="#tbl-anchor-wip" class="nx-table-index-item">
-        <i class="bi bi-arrow-repeat"></i> WIP End Sprint
-        <span class="badge">{{ wip_rows | length }}</span>
+        <i class="bi bi-arrow-repeat" aria-hidden="true"></i> WIP End Sprint
+        <span class="badge" aria-label="{{ wip_rows | length }} lignes">{{ wip_rows | length }}</span>
       </a></li>
       {% endif %}
       {% if no_est_rows %}
       <li><a href="#tbl-anchor-noest" class="nx-table-index-item">
-        <i class="bi bi-exclamation-triangle"></i> Sans estimation
-        <span class="badge">{{ no_est_rows | length }}</span>
+        <i class="bi bi-exclamation-triangle" aria-hidden="true"></i> Sans estimation
+        <span class="badge" aria-label="{{ no_est_rows | length }} lignes">{{ no_est_rows | length }}</span>
       </a></li>
       {% endif %}
       {% if no_tempo_rows %}
       <li><a href="#tbl-anchor-notempo" class="nx-table-index-item">
-        <i class="bi bi-stopwatch"></i> Sans tempo
-        <span class="badge">{{ no_tempo_rows | length }}</span>
+        <i class="bi bi-stopwatch" aria-hidden="true"></i> Sans tempo
+        <span class="badge" aria-label="{{ no_tempo_rows | length }} lignes">{{ no_tempo_rows | length }}</span>
       </a></li>
       {% endif %}
       {% if resolution_rows %}
       <li><a href="#tbl-anchor-resolution" class="nx-table-index-item">
-        <i class="bi bi-hourglass-split"></i> Temps de résolution
-        <span class="badge">{{ resolution_rows | length }}</span>
+        <i class="bi bi-hourglass-split" aria-hidden="true"></i> Temps de résolution
+        <span class="badge" aria-label="{{ resolution_rows | length }} lignes">{{ resolution_rows | length }}</span>
       </a></li>
       {% endif %}
     </ul>
