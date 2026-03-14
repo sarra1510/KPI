@@ -193,9 +193,15 @@
   const fileInput = document.getElementById('file-input');
   const fileNameEl = document.getElementById('file-name');
 
+  function escapeHtml(text) {
+    const div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
+  }
+
   fileInput.addEventListener('change', () => {
     if (fileInput.files.length > 0) {
-      fileNameEl.innerHTML = '<i class="bi bi-check-circle-fill text-success"></i> Fichier sélectionné : ' + fileInput.files[0].name;
+      fileNameEl.innerHTML = '<i class="bi bi-check-circle-fill text-success"></i> Fichier sélectionné : ' + escapeHtml(fileInput.files[0].name);
     }
   });
 
@@ -214,7 +220,7 @@
     const files = e.dataTransfer.files;
     if (files.length > 0) {
       fileInput.files = files;
-      fileNameEl.innerHTML = '<i class="bi bi-check-circle-fill text-success"></i> Fichier sélectionné : ' + files[0].name;
+      fileNameEl.innerHTML = '<i class="bi bi-check-circle-fill text-success"></i> Fichier sélectionné : ' + escapeHtml(files[0].name);
     }
   });
 </script>
