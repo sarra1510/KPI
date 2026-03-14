@@ -3,175 +3,444 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Sprint KPI Calculator — NeoXam</title>
+  <title>Sprint KPI Calculator — Jira Style</title>
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous" />
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" />
   <style>
     :root {
-      --nx-teal: #00BFA6;
-      --nx-teal-dark: #00997D;
-      --nx-teal-light: #E0F7F3;
-      --nx-dark: #1a1a2e;
+      /* Jira/Atlassian Design System Colors */
+      --jira-blue: #0052CC;
+      --jira-blue-dark: #0747A6;
+      --jira-blue-light: #DEEBFF;
+      --jira-blue-subtle: #E9F2FF;
+      --jira-purple: #5243AA;
+      --jira-teal: #00875A;
+      --jira-yellow: #FF991F;
+      --jira-red: #DE350B;
+      --jira-green: #00875A;
+      --jira-neutral-dark: #172B4D;
+      --jira-neutral-medium: #42526E;
+      --jira-neutral-light: #6B778C;
+      --jira-neutral-subtle: #DFE1E6;
+      --jira-background: #FAFBFC;
+      --jira-surface: #FFFFFF;
+      --jira-sidebar: #0747A6;
     }
-    body { background: #f0f4f8; }
-    /* Header */
-    .nx-header {
-      background: linear-gradient(135deg, var(--nx-dark) 0%, var(--nx-teal) 100%);
-      color: #fff;
-      padding: 2rem 0 1.5rem;
+    * { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif; }
+    body { background: var(--jira-background); margin: 0; padding: 0; }
+    
+    /* Jira-style Sidebar */
+    .jira-sidebar {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 64px;
+      height: 100vh;
+      background: linear-gradient(180deg, var(--jira-blue-dark) 0%, var(--jira-blue) 100%);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding-top: 1rem;
+      z-index: 1000;
+    }
+    .jira-logo {
+      width: 40px;
+      height: 40px;
+      background: #fff;
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
       margin-bottom: 2rem;
+      box-shadow: 0 2px 8px rgba(0,0,0,.15);
     }
-    .nx-logo-circle {
-      width: 52px; height: 52px;
-      background: var(--nx-dark);
-      border-radius: 50%;
+    .jira-logo svg { width: 24px; height: 24px; }
+    .jira-nav-item {
+      width: 44px;
+      height: 44px;
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: rgba(255,255,255,.7);
+      margin-bottom: .5rem;
+      cursor: pointer;
+      transition: all .15s ease;
+      text-decoration: none;
+    }
+    .jira-nav-item:hover { background: rgba(255,255,255,.15); color: #fff; }
+    .jira-nav-item.active { background: rgba(255,255,255,.2); color: #fff; }
+    .jira-nav-item i { font-size: 1.25rem; }
+    
+    /* Main content area */
+    .jira-main {
+      margin-left: 64px;
+      min-height: 100vh;
+      padding: 0;
+    }
+    
+    /* Jira-style Header */
+    .jira-header {
+      background: var(--jira-surface);
+      border-bottom: 1px solid var(--jira-neutral-subtle);
+      padding: 1rem 2rem;
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+    }
+    .jira-header-title {
+      font-size: 1.5rem;
+      font-weight: 600;
+      color: var(--jira-neutral-dark);
+      margin: 0;
+    }
+    .jira-header-subtitle {
+      font-size: .875rem;
+      color: var(--jira-neutral-light);
+      margin: 0;
+    }
+    .jira-breadcrumb {
+      font-size: .75rem;
+      color: var(--jira-neutral-light);
+      display: flex;
+      align-items: center;
+      gap: .5rem;
+    }
+    .jira-breadcrumb a { color: var(--jira-blue); text-decoration: none; }
+    .jira-breadcrumb a:hover { text-decoration: underline; }
+    
+    /* Content Container */
+    .jira-content {
+      padding: 2rem;
+      max-width: 720px;
+      margin: 0 auto;
+    }
+    
+    /* Jira-style Cards */
+    .jira-card {
+      background: var(--jira-surface);
+      border-radius: 8px;
+      box-shadow: 0 1px 3px rgba(23,43,77,.1), 0 0 1px rgba(23,43,77,.2);
+      overflow: hidden;
+    }
+    .jira-card-header {
+      padding: 1rem 1.25rem;
+      border-bottom: 1px solid var(--jira-neutral-subtle);
+      background: var(--jira-background);
+    }
+    .jira-card-title {
+      font-size: .875rem;
+      font-weight: 600;
+      color: var(--jira-neutral-dark);
+      text-transform: uppercase;
+      letter-spacing: .04em;
+      margin: 0;
+    }
+    .jira-card-body { padding: 1.5rem 1.25rem; }
+    
+    /* Drop zone */
+    .jira-drop-zone {
+      border: 2px dashed var(--jira-blue);
+      border-radius: 8px;
+      padding: 2.5rem 1.5rem;
+      text-align: center;
+      background: var(--jira-blue-subtle);
+      cursor: pointer;
+      transition: all .2s ease;
+    }
+    .jira-drop-zone:hover { background: var(--jira-blue-light); border-color: var(--jira-blue-dark); }
+    .jira-drop-zone.drag-over { background: var(--jira-blue-light); border-color: var(--jira-blue-dark); transform: scale(1.01); }
+    .jira-drop-zone .icon { font-size: 2.5rem; color: var(--jira-blue); margin-bottom: .75rem; }
+    .jira-drop-zone input[type="file"] { display: none; }
+    .jira-drop-zone-text { font-size: .95rem; font-weight: 500; color: var(--jira-neutral-dark); margin-bottom: .25rem; }
+    .jira-drop-zone-hint { font-size: .8rem; color: var(--jira-neutral-light); }
+    #file-name { margin-top: .75rem; font-size: .875rem; color: var(--jira-neutral-medium); }
+    
+    /* Form elements */
+    .jira-form-label {
+      font-size: .75rem;
+      font-weight: 600;
+      color: var(--jira-neutral-medium);
+      text-transform: uppercase;
+      letter-spacing: .04em;
+      margin-bottom: .5rem;
+      display: block;
+    }
+    .jira-input {
+      border: 2px solid var(--jira-neutral-subtle);
+      border-radius: 4px;
+      padding: .625rem .75rem;
+      font-size: .95rem;
+      color: var(--jira-neutral-dark);
+      transition: border-color .15s ease;
+      width: 100%;
+    }
+    .jira-input:focus { outline: none; border-color: var(--jira-blue); box-shadow: 0 0 0 2px var(--jira-blue-light); }
+    .jira-input-group {
+      display: flex;
+      align-items: stretch;
+    }
+    .jira-input-addon {
+      background: var(--jira-background);
+      border: 2px solid var(--jira-neutral-subtle);
+      border-right: none;
+      border-radius: 4px 0 0 4px;
+      padding: 0 .75rem;
+      display: flex;
+      align-items: center;
+      color: var(--jira-neutral-light);
+    }
+    .jira-input-addon-right {
+      border-right: 2px solid var(--jira-neutral-subtle);
+      border-left: none;
+      border-radius: 0 4px 4px 0;
+    }
+    .jira-input-group .jira-input {
+      border-radius: 0;
+    }
+    .jira-form-hint {
+      font-size: .75rem;
+      color: var(--jira-neutral-light);
+      margin-top: .375rem;
+    }
+    
+    /* Buttons */
+    .jira-btn {
       display: inline-flex;
       align-items: center;
       justify-content: center;
-      margin-right: .75rem;
-      flex-shrink: 0;
-    }
-    .nx-logo-circle svg { width: 28px; height: 28px; }
-    .nx-title { font-size: 1.7rem; font-weight: 800; letter-spacing: .06em; margin: 0; }
-    .nx-subtitle { font-size: .95rem; opacity: .85; margin: 0; }
-    /* Cards */
-    .card { border: none; border-radius: 1rem; box-shadow: 0 2px 12px rgba(0,0,0,.08); }
-    /* Drop zone */
-    .drop-zone {
-      border: 2.5px dashed var(--nx-teal);
-      border-radius: .75rem;
-      padding: 3rem 1rem;
-      text-align: center;
-      background: var(--nx-teal-light);
+      gap: .5rem;
+      padding: .625rem 1rem;
+      border-radius: 4px;
+      font-size: .875rem;
+      font-weight: 500;
       cursor: pointer;
-      transition: background .2s, border-color .2s;
+      transition: all .15s ease;
+      border: none;
+      text-decoration: none;
     }
-    .drop-zone.drag-over { background: #b2ede6; border-color: var(--nx-teal-dark); }
-    .drop-zone .icon { font-size: 3rem; margin-bottom: .75rem; }
-    .drop-zone input[type="file"] { display: none; }
-    #file-name { margin-top: .75rem; font-size: .95rem; color: #374151; }
-    /* Buttons */
-    .btn-primary { background: var(--nx-teal); border-color: var(--nx-teal); color: #fff; }
-    .btn-primary:hover { background: var(--nx-teal-dark); border-color: var(--nx-teal-dark); color: #fff; }
-    /* History table */
-    .history-card .card-header {
-      background: var(--nx-teal-light);
-      color: var(--nx-teal-dark);
-      font-weight: 700;
-      font-size: .9rem;
-      letter-spacing: .04em;
-      text-transform: uppercase;
-      border-bottom: 1px solid #c5ebe4;
-    }
-    .history-badge {
-      background: var(--nx-teal);
+    .jira-btn-primary {
+      background: var(--jira-blue);
       color: #fff;
-      font-size: .75rem;
-      border-radius: .5rem;
-      padding: .15rem .5rem;
     }
-    .history-link { color: var(--nx-teal-dark); text-decoration: none; font-weight: 600; }
-    .history-link:hover { color: var(--nx-teal); text-decoration: underline; }
+    .jira-btn-primary:hover { background: var(--jira-blue-dark); color: #fff; }
+    .jira-btn-lg {
+      padding: .875rem 1.5rem;
+      font-size: 1rem;
+    }
+    .jira-btn-block { width: 100%; }
+    
+    /* History table */
+    .jira-history-badge {
+      background: var(--jira-blue);
+      color: #fff;
+      font-size: .7rem;
+      font-weight: 600;
+      border-radius: 10px;
+      padding: .15rem .5rem;
+      margin-left: .5rem;
+    }
+    .jira-table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+    .jira-table th {
+      font-size: .7rem;
+      font-weight: 600;
+      color: var(--jira-neutral-light);
+      text-transform: uppercase;
+      letter-spacing: .04em;
+      padding: .75rem 1rem;
+      text-align: left;
+      border-bottom: 1px solid var(--jira-neutral-subtle);
+      background: var(--jira-background);
+    }
+    .jira-table td {
+      font-size: .875rem;
+      color: var(--jira-neutral-dark);
+      padding: .75rem 1rem;
+      border-bottom: 1px solid var(--jira-neutral-subtle);
+    }
+    .jira-table tr:hover { background: var(--jira-background); }
+    .jira-table tr:last-child td { border-bottom: none; }
+    .jira-link {
+      color: var(--jira-blue);
+      text-decoration: none;
+      font-weight: 500;
+    }
+    .jira-link:hover { text-decoration: underline; }
+    
+    /* Alert */
+    .jira-alert {
+      padding: 1rem 1.25rem;
+      border-radius: 4px;
+      margin-bottom: 1rem;
+      display: flex;
+      align-items: flex-start;
+      gap: .75rem;
+    }
+    .jira-alert-danger {
+      background: #FFEBE6;
+      border-left: 3px solid var(--jira-red);
+      color: #AE2A19;
+    }
+    .jira-alert-info {
+      background: var(--jira-blue-subtle);
+      border-left: 3px solid var(--jira-blue);
+      color: var(--jira-blue-dark);
+    }
+    .jira-alert-icon { font-size: 1.1rem; flex-shrink: 0; }
+    .jira-alert-content { flex-grow: 1; font-size: .875rem; }
+    
+    /* Footer */
+    .jira-footer {
+      text-align: center;
+      padding: 1.5rem;
+      color: var(--jira-neutral-light);
+      font-size: .75rem;
+    }
+    
+    /* Sprint badge */
+    .jira-sprint-badge {
+      background: var(--jira-purple);
+      color: #fff;
+      font-size: .7rem;
+      font-weight: 600;
+      padding: .25rem .625rem;
+      border-radius: 4px;
+      display: inline-flex;
+      align-items: center;
+      gap: .35rem;
+    }
   </style>
 </head>
 <body>
 
-<header class="nx-header">
-  <div class="container d-flex align-items-center justify-content-center" style="max-width: 680px;">
-    <div class="nx-logo-circle">
-      <!-- NeoXam X icon in teal -->
-      <svg viewBox="0 0 28 28" fill="none" xmlns="http://www.w3.org/2000/svg">
-        <path d="M4 4L14 14M14 14L24 4M14 14L4 24M14 14L24 24" stroke="#00BFA6" stroke-width="3.5" stroke-linecap="round"/>
-      </svg>
-    </div>
+<!-- Jira-style Sidebar -->
+<nav class="jira-sidebar">
+  <div class="jira-logo">
+    <!-- Jira-style icon -->
+    <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <path d="M11.998 2L6.998 7H10.5V11.5H6.998L11.998 16.5L16.998 11.5H13.5V7H16.998L11.998 2Z" fill="#0052CC"/>
+      <path d="M11.998 22L6.998 17H10.5V12.5H6.998L11.998 7.5L16.998 12.5H13.5V17H16.998L11.998 22Z" fill="#2684FF"/>
+    </svg>
+  </div>
+  <a href="/" class="jira-nav-item active" title="Accueil">
+    <i class="bi bi-house-door"></i>
+  </a>
+  <a href="/" class="jira-nav-item" title="Rapports">
+    <i class="bi bi-bar-chart-line"></i>
+  </a>
+  <a href="/" class="jira-nav-item" title="Backlog">
+    <i class="bi bi-list-task"></i>
+  </a>
+  <a href="/" class="jira-nav-item" title="Sprints">
+    <i class="bi bi-lightning-charge"></i>
+  </a>
+</nav>
+
+<main class="jira-main">
+  <!-- Header -->
+  <header class="jira-header">
     <div>
-      <p class="nx-title">SPRINT KPI DASHBOARD</p>
-      <p class="nx-subtitle">Calculez les KPIs de votre sprint en quelques secondes</p>
+      <div class="jira-breadcrumb">
+        <a href="/">Projects</a>
+        <i class="bi bi-chevron-right" style="font-size:.5rem;"></i>
+        <span>Sprint KPI</span>
+      </div>
+      <h1 class="jira-header-title">Sprint KPI Calculator</h1>
+      <p class="jira-header-subtitle">Analyze sprint metrics from your Jira exports</p>
     </div>
-  </div>
-</header>
-
-<div class="container" style="max-width: 680px;">
-
-  {% with messages = get_flashed_messages(with_categories=true) %}
-    {% for category, message in messages %}
-      <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
-        {{ message }}
-        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-      </div>
-    {% endfor %}
-  {% endwith %}
-
-  <div class="card p-4 mb-4">
-    <h2 class="h5 mb-4 text-center fw-bold" style="color: var(--nx-dark);">Importer le fichier Excel du sprint</h2>
-
-    <form method="post" action="/calculate" enctype="multipart/form-data" id="upload-form">
-
-      <div class="drop-zone mb-3" id="drop-zone" onclick="document.getElementById('file-input').click()">
-        <div class="icon"><i class="bi bi-folder2-open"></i></div>
-        <p class="mb-1 fw-semibold">Glissez-déposez votre fichier Excel ici</p>
-        <p class="text-muted small">ou cliquez pour sélectionner</p>
-        <p class="text-muted small">.xlsx / .xls — 3 feuilles : Start, End Sprint, Worklogs</p>
-        <input type="file" id="file-input" name="file" accept=".xlsx,.xls" required />
-      </div>
-      <div id="file-name" class="text-center mb-3"></div>
-
-      <div class="mb-4">
-        <label for="capacity" class="form-label fw-semibold">
-          Capacité équipe (jours) <span class="text-danger">*</span>
-        </label>
-        <div class="input-group">
-          <span class="input-group-text"><i class="bi bi-stopwatch"></i></span>
-          <input
-            type="number"
-            id="capacity"
-            name="capacity"
-            class="form-control"
-            placeholder="ex. 30"
-            min="0.1"
-            step="any"
-            required
-          />
-          <span class="input-group-text">j</span>
+    <div class="ms-auto">
+      <span class="jira-sprint-badge">
+        <i class="bi bi-lightning-charge-fill"></i>
+        Sprint Analysis
+      </span>
+    </div>
+  </header>
+  
+  <div class="jira-content">
+    
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% for category, message in messages %}
+        <div class="jira-alert jira-alert-{{ category }}">
+          <i class="bi bi-exclamation-circle-fill jira-alert-icon"></i>
+          <div class="jira-alert-content">{{ message }}</div>
         </div>
-        <div class="form-text">Somme des jours disponibles de l'équipe pendant le sprint.</div>
+      {% endfor %}
+    {% endwith %}
+
+    <!-- Upload Card -->
+    <div class="jira-card mb-4">
+      <div class="jira-card-header">
+        <h2 class="jira-card-title"><i class="bi bi-cloud-upload me-2"></i>Import Sprint Data</h2>
       </div>
+      <div class="jira-card-body">
+        <form method="post" action="/calculate" enctype="multipart/form-data" id="upload-form">
+          
+          <div class="jira-drop-zone mb-3" id="drop-zone" onclick="document.getElementById('file-input').click()">
+            <div class="icon"><i class="bi bi-file-earmark-spreadsheet"></i></div>
+            <p class="jira-drop-zone-text">Drop your Jira Excel export here</p>
+            <p class="jira-drop-zone-hint">or click to browse</p>
+            <p class="jira-drop-zone-hint">.xlsx / .xls — Sheets: Start, End Sprint, Worklogs</p>
+            <input type="file" id="file-input" name="file" accept=".xlsx,.xls" required />
+          </div>
+          <div id="file-name" class="text-center mb-4"></div>
 
-      <div class="d-grid">
-        <button type="submit" class="btn btn-primary btn-lg">
-          <i class="bi bi-rocket-takeoff"></i> Calculer les KPIs
-        </button>
+          <div class="mb-4">
+            <label for="capacity" class="jira-form-label">
+              Team Capacity (days) <span style="color:var(--jira-red);">*</span>
+            </label>
+            <div class="jira-input-group">
+              <span class="jira-input-addon"><i class="bi bi-people"></i></span>
+              <input
+                type="number"
+                id="capacity"
+                name="capacity"
+                class="jira-input"
+                placeholder="e.g. 30"
+                min="0.1"
+                step="any"
+                required
+              />
+              <span class="jira-input-addon jira-input-addon-right">days</span>
+            </div>
+            <p class="jira-form-hint">Total available team days during the sprint.</p>
+          </div>
+
+          <button type="submit" class="jira-btn jira-btn-primary jira-btn-lg jira-btn-block">
+            <i class="bi bi-graph-up"></i> Calculate KPIs
+          </button>
+
+        </form>
       </div>
-
-    </form>
-  </div>
-
-  <!-- Upload History -->
-  {% if history %}
-  <div class="card history-card mb-4">
-    <div class="card-header d-flex align-items-center gap-2">
-      <i class="bi bi-folder"></i> Historique des fichiers
-      <span class="history-badge ms-1">{{ history | length }}</span>
     </div>
-    <div class="card-body p-0">
-      <table class="table table-sm table-hover mb-0">
+
+    <!-- Upload History -->
+    {% if history %}
+    <div class="jira-card mb-4">
+      <div class="jira-card-header d-flex align-items-center">
+        <h2 class="jira-card-title"><i class="bi bi-clock-history me-2"></i>Recent Reports</h2>
+        <span class="jira-history-badge">{{ history | length }}</span>
+      </div>
+      <table class="jira-table">
         <thead>
           <tr>
-            <th class="ps-3" style="font-size:.8rem;color:#6b7280;">FICHIER</th>
-            <th style="font-size:.8rem;color:#6b7280;">DATE</th>
-            <th style="font-size:.8rem;color:#6b7280;">CAPACITÉ</th>
-            <th style="font-size:.8rem;color:#6b7280;">RAPPORT</th>
+            <th>File</th>
+            <th>Date</th>
+            <th>Capacity</th>
+            <th>Report</th>
           </tr>
         </thead>
         <tbody>
           {% for entry in history %}
           <tr>
-            <td class="ps-3" style="font-size:.88rem;word-break:break-all;">{{ entry.filename }}</td>
-            <td style="font-size:.88rem;white-space:nowrap;">{{ entry.uploaded_at }}</td>
-            <td style="font-size:.88rem;">{{ entry.capacity }}j</td>
+            <td style="word-break:break-all;">{{ entry.filename }}</td>
+            <td style="white-space:nowrap;">{{ entry.uploaded_at }}</td>
+            <td>{{ entry.capacity }} days</td>
             <td>
-              <a href="/download/{{ entry.report_filename }}" class="history-link" style="font-size:.85rem;">
-                <i class="bi bi-download"></i> Excel
+              <a href="/download/{{ entry.report_filename }}" class="jira-link">
+                <i class="bi bi-download"></i> Download
               </a>
             </td>
           </tr>
@@ -179,13 +448,13 @@
         </tbody>
       </table>
     </div>
-  </div>
-  {% endif %}
+    {% endif %}
 
-  <div class="mt-2 mb-4 text-center text-muted small">
-    <p>Le fichier sera traité localement — aucune donnée n'est envoyée à un serveur externe.</p>
+    <div class="jira-footer">
+      <p><i class="bi bi-shield-check"></i> Your data is processed locally — no external servers involved.</p>
+    </div>
   </div>
-</div>
+</main>
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-YvpcrYf0tY3lHB60NNkmXc4s9bIOgUxi8T/jzmq0oWnOFvYqbsGH5vxsVLXuLVrJ" crossorigin="anonymous"></script>
 <script>
@@ -201,7 +470,7 @@
 
   fileInput.addEventListener('change', () => {
     if (fileInput.files.length > 0) {
-      fileNameEl.innerHTML = '<i class="bi bi-check-circle-fill text-success"></i> Fichier sélectionné : ' + escapeHtml(fileInput.files[0].name);
+      fileNameEl.innerHTML = '<i class="bi bi-check-circle-fill" style="color:#00875A;"></i> Selected: <strong>' + escapeHtml(fileInput.files[0].name) + '</strong>';
     }
   });
 
@@ -220,7 +489,7 @@
     const files = e.dataTransfer.files;
     if (files.length > 0) {
       fileInput.files = files;
-      fileNameEl.innerHTML = '<i class="bi bi-check-circle-fill text-success"></i> Fichier sélectionné : ' + escapeHtml(files[0].name);
+      fileNameEl.innerHTML = '<i class="bi bi-check-circle-fill" style="color:#00875A;"></i> Selected: <strong>' + escapeHtml(files[0].name) + '</strong>';
     }
   });
 </script>

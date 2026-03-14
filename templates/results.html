@@ -3,798 +3,669 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>SPRINT KPI DASHBOARD — NeoXam</title>
+  <title>Sprint KPI Dashboard — Jira Style</title>
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous" />
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" />
   <style>
     :root {
-      --nx-teal: #00BFA6;
-      --nx-teal-dark: #00997D;
-      --nx-teal-light: #E0F7F3;
-      --nx-dark: #1a1a2e;
+      /* Jira/Atlassian Design System Colors */
+      --jira-blue: #0052CC;
+      --jira-blue-dark: #0747A6;
+      --jira-blue-light: #DEEBFF;
+      --jira-blue-subtle: #E9F2FF;
+      --jira-purple: #5243AA;
+      --jira-purple-light: #EAE6FF;
+      --jira-teal: #00875A;
+      --jira-teal-light: #E3FCEF;
+      --jira-yellow: #FF991F;
+      --jira-yellow-light: #FFFAE6;
+      --jira-red: #DE350B;
+      --jira-red-light: #FFEBE6;
+      --jira-green: #00875A;
+      --jira-green-light: #E3FCEF;
+      --jira-neutral-dark: #172B4D;
+      --jira-neutral-medium: #42526E;
+      --jira-neutral-light: #6B778C;
+      --jira-neutral-subtle: #DFE1E6;
+      --jira-background: #FAFBFC;
+      --jira-surface: #FFFFFF;
     }
-    body { background: #f0f4f8; }
-
-    /* ── Top bar ── */
-    .nx-topbar {
-      background: linear-gradient(135deg, var(--nx-dark) 0%, var(--nx-teal) 100%);
-      color: #fff;
-      padding: 1rem 1.5rem;
+    * { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif; }
+    body { background: var(--jira-background); margin: 0; padding: 0; }
+    
+    /* Jira-style Sidebar */
+    .jira-sidebar {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 64px;
+      height: 100vh;
+      background: linear-gradient(180deg, var(--jira-blue-dark) 0%, var(--jira-blue) 100%);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding-top: 1rem;
+      z-index: 1000;
     }
-    .nx-logo-circle {
-      width: 44px; height: 44px;
-      background: var(--nx-dark);
-      border-radius: 50%;
-      display: inline-flex;
+    .jira-logo {
+      width: 40px;
+      height: 40px;
+      background: #fff;
+      border-radius: 8px;
+      display: flex;
       align-items: center;
       justify-content: center;
-      flex-shrink: 0;
+      margin-bottom: 2rem;
+      box-shadow: 0 2px 8px rgba(0,0,0,.15);
     }
-    .nx-logo-circle svg { width: 24px; height: 24px; }
-    .nx-topbar-title { font-size: 1.25rem; font-weight: 800; letter-spacing: .08em; }
-    .nx-topbar-sub { font-size: .8rem; opacity: .8; }
-
-    /* Buttons */
-    .btn-nx {
-      background: var(--nx-teal);
-      border-color: var(--nx-teal);
-      color: #fff;
-      font-weight: 600;
-    }
-    .btn-nx:hover { background: var(--nx-teal-dark); border-color: var(--nx-teal-dark); color: #fff; }
-    .btn-nx-outline {
-      border: 2px solid var(--nx-teal);
-      color: var(--nx-teal);
-      background: transparent;
-      font-weight: 600;
-    }
-    .btn-nx-outline:hover { background: var(--nx-teal); color: #fff; }
-
-    /* ── Hero card (Capacity Utilization) ── */
-    .hero-kpi-card {
-      background: linear-gradient(135deg, var(--nx-dark) 0%, var(--nx-teal) 100%);
-      border-radius: 1.25rem;
-      color: #fff;
-      padding: 2rem 2.5rem;
-      box-shadow: 0 4px 24px rgba(0,191,166,.25);
-    }
-    .hero-kpi-value { font-size: 4rem; font-weight: 900; line-height: 1; }
-    .hero-kpi-label { font-size: .85rem; letter-spacing: .1em; opacity: .85; margin-top: .4rem; }
-    .hero-kpi-sub { font-size: .95rem; opacity: .8; margin-top: .5rem; }
-    .progress-hero { height: 10px; border-radius: 5px; background: rgba(255,255,255,.25); }
-    .progress-hero .progress-bar { border-radius: 5px; background: #fff; }
-
-    /* ── KPI cards grid ── */
-    .kpi-card {
-      border: none;
-      border-radius: 1rem;
-      box-shadow: 0 2px 12px rgba(0,0,0,.07);
-      transition: transform .15s, box-shadow .15s;
-      height: 100%;
-      background: #fff;
-      cursor: help;
-    }
-    .kpi-card:hover { transform: translateY(-3px); box-shadow: 0 6px 20px rgba(0,0,0,.12); }
-    .kpi-value { font-size: 2.5rem; font-weight: 900; line-height: 1; }
-    .kpi-label {
-      font-size: .78rem;
-      color: #6b7280;
-      letter-spacing: .07em;
-      margin-top: .35rem;
-    }
-    .kpi-icon { font-size: 1.6rem; margin-bottom: .3rem; }
-
-    /* Color palette */
-    .color-green  { color: #16a34a; }
-    .color-yellow { color: #d97706; }
-    .color-red    { color: #dc2626; }
-    .color-teal   { color: var(--nx-teal-dark); }
-    .color-gray   { color: #6b7280; }
-
-    /* ── Horizontal Navigation ── */
-    .nx-nav-horizontal {
-      background: #fff;
-      border-radius: 1rem;
-      box-shadow: 0 2px 12px rgba(0,0,0,.07);
-      padding: .75rem 1rem;
-      margin-bottom: 1.5rem;
+    .jira-logo svg { width: 24px; height: 24px; }
+    .jira-nav-item {
+      width: 44px;
+      height: 44px;
+      border-radius: 8px;
       display: flex;
-      flex-wrap: wrap;
+      align-items: center;
+      justify-content: center;
+      color: rgba(255,255,255,.7);
+      margin-bottom: .5rem;
+      cursor: pointer;
+      transition: all .15s ease;
+      text-decoration: none;
+    }
+    .jira-nav-item:hover { background: rgba(255,255,255,.15); color: #fff; }
+    .jira-nav-item.active { background: rgba(255,255,255,.2); color: #fff; }
+    .jira-nav-item i { font-size: 1.25rem; }
+    
+    /* Main content area */
+    .jira-main {
+      margin-left: 64px;
+      min-height: 100vh;
+      padding: 0;
+    }
+    
+    /* Jira-style Header */
+    .jira-header {
+      background: var(--jira-surface);
+      border-bottom: 1px solid var(--jira-neutral-subtle);
+      padding: 1rem 2rem;
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+    }
+    .jira-header-title {
+      font-size: 1.25rem;
+      font-weight: 600;
+      color: var(--jira-neutral-dark);
+      margin: 0;
+    }
+    .jira-header-subtitle {
+      font-size: .8rem;
+      color: var(--jira-neutral-light);
+      margin: 0;
+    }
+    .jira-breadcrumb {
+      font-size: .75rem;
+      color: var(--jira-neutral-light);
+      display: flex;
       align-items: center;
       gap: .5rem;
     }
-    .nx-nav-title {
-      font-size: .7rem;
-      font-weight: 700;
-      color: #9ca3af;
-      letter-spacing: .1em;
-      text-transform: uppercase;
-      margin-right: .5rem;
-    }
-    .nx-nav-item {
+    .jira-breadcrumb a { color: var(--jira-blue); text-decoration: none; }
+    .jira-breadcrumb a:hover { text-decoration: underline; }
+    
+    /* Buttons */
+    .jira-btn {
       display: inline-flex;
       align-items: center;
-      gap: .35rem;
-      background: none;
-      border: none;
-      padding: .5rem .9rem;
-      border-radius: .5rem;
-      font-size: .85rem;
-      color: #374151;
+      justify-content: center;
+      gap: .5rem;
+      padding: .5rem .875rem;
+      border-radius: 4px;
+      font-size: .875rem;
+      font-weight: 500;
       cursor: pointer;
-      transition: background .15s, color .15s;
-      white-space: nowrap;
+      transition: all .15s ease;
+      border: none;
       text-decoration: none;
     }
-    .nx-nav-item:hover { background: var(--nx-teal-light); color: var(--nx-teal-dark); }
-    .nx-nav-item.active { background: var(--nx-teal-light); color: var(--nx-teal-dark); font-weight: 700; border-bottom: 2px solid var(--nx-teal); }
-
-    /* ── Floating Table Reference Index (Left Side) ── */
-    .nx-table-index {
-      position: fixed;
-      top: 50%;
-      transform: translateY(-50%);
-      left: 20px;
-      width: 220px;
-      max-height: calc(100vh - 150px);
-      overflow-y: auto;
-      background: #fff;
-      border-radius: 1rem;
-      box-shadow: 0 4px 24px rgba(0,0,0,.12);
-      padding: 1rem 1rem;
-      z-index: 1000;
-      transition: opacity .2s, transform .2s, left .3s ease;
+    .jira-btn-primary {
+      background: var(--jira-blue);
+      color: #fff;
     }
-    .nx-table-index:empty,
-    .nx-table-index.hidden {
-      display: none;
+    .jira-btn-primary:hover { background: var(--jira-blue-dark); color: #fff; }
+    .jira-btn-secondary {
+      background: transparent;
+      color: var(--jira-neutral-medium);
+      border: 1px solid var(--jira-neutral-subtle);
     }
-    .nx-table-index.collapsed {
-      left: -220px;
+    .jira-btn-secondary:hover { background: var(--jira-background); color: var(--jira-neutral-dark); }
+    
+    /* Tabs Navigation */
+    .jira-tabs {
+      background: var(--jira-surface);
+      border-bottom: 1px solid var(--jira-neutral-subtle);
+      padding: 0 2rem;
+      display: flex;
+      gap: 0;
     }
-    .nx-table-index-list li.hidden-item {
-      display: none;
+    .jira-tab {
+      padding: .875rem 1rem;
+      font-size: .875rem;
+      font-weight: 500;
+      color: var(--jira-neutral-medium);
+      text-decoration: none;
+      border-bottom: 2px solid transparent;
+      transition: all .15s ease;
+      display: inline-flex;
+      align-items: center;
+      gap: .5rem;
+      cursor: pointer;
     }
-    .nx-table-index-title {
+    .jira-tab:hover { color: var(--jira-blue); background: var(--jira-blue-subtle); }
+    .jira-tab.active { color: var(--jira-blue); border-bottom-color: var(--jira-blue); font-weight: 600; }
+    .jira-tab-badge {
+      background: var(--jira-neutral-subtle);
+      color: var(--jira-neutral-medium);
       font-size: .7rem;
-      font-weight: 700;
-      color: #9ca3af;
-      letter-spacing: .1em;
-      text-transform: uppercase;
-      margin-bottom: .6rem;
+      font-weight: 600;
+      padding: .125rem .375rem;
+      border-radius: 10px;
+    }
+    .jira-tab.active .jira-tab-badge { background: var(--jira-blue-light); color: var(--jira-blue); }
+    
+    /* Content Container */
+    .jira-content {
+      padding: 1.5rem 2rem 2rem;
+    }
+    
+    /* Hero KPI Card */
+    .jira-hero-card {
+      background: linear-gradient(135deg, var(--jira-blue-dark) 0%, var(--jira-blue) 100%);
+      border-radius: 8px;
+      padding: 1.5rem 2rem;
+      color: #fff;
+      margin-bottom: 1.5rem;
+      box-shadow: 0 4px 16px rgba(0,82,204,.3);
+    }
+    .jira-hero-value { font-size: 3.5rem; font-weight: 700; line-height: 1; }
+    .jira-hero-label { font-size: .8rem; font-weight: 600; letter-spacing: .08em; text-transform: uppercase; opacity: .9; margin-top: .375rem; }
+    .jira-hero-sub { font-size: .875rem; opacity: .8; margin-top: .25rem; }
+    .jira-hero-progress { height: 8px; border-radius: 4px; background: rgba(255,255,255,.25); margin-top: 1rem; }
+    .jira-hero-progress-bar { height: 100%; border-radius: 4px; background: #fff; transition: width .3s ease; }
+    
+    /* KPI Cards Grid */
+    .jira-kpi-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 1rem; margin-bottom: 1.5rem; }
+    .jira-kpi-card {
+      background: var(--jira-surface);
+      border-radius: 8px;
+      padding: 1.25rem;
+      box-shadow: 0 1px 3px rgba(23,43,77,.1), 0 0 1px rgba(23,43,77,.2);
+      transition: transform .15s ease, box-shadow .15s ease;
+      cursor: default;
+    }
+    .jira-kpi-card:hover { transform: translateY(-2px); box-shadow: 0 4px 12px rgba(23,43,77,.12); }
+    .jira-kpi-icon { font-size: 1.5rem; margin-bottom: .5rem; }
+    .jira-kpi-value { font-size: 2rem; font-weight: 700; line-height: 1; color: var(--jira-neutral-dark); }
+    .jira-kpi-label { font-size: .75rem; font-weight: 500; color: var(--jira-neutral-light); text-transform: uppercase; letter-spacing: .04em; margin-top: .375rem; }
+    
+    /* Status colors */
+    .status-green { color: var(--jira-green); }
+    .status-yellow { color: var(--jira-yellow); }
+    .status-red { color: var(--jira-red); }
+    .status-blue { color: var(--jira-blue); }
+    
+    /* Cards */
+    .jira-card {
+      background: var(--jira-surface);
+      border-radius: 8px;
+      box-shadow: 0 1px 3px rgba(23,43,77,.1), 0 0 1px rgba(23,43,77,.2);
+      overflow: hidden;
+      margin-bottom: 1.5rem;
+    }
+    .jira-card-header {
+      padding: .875rem 1.25rem;
+      border-bottom: 1px solid var(--jira-neutral-subtle);
+      background: var(--jira-background);
       display: flex;
       align-items: center;
-      gap: .35rem;
-    }
-    /* Toggle button for collapsible menu */
-    .nx-table-index-toggle {
-      position: fixed;
-      top: 50%;
-      transform: translateY(-50%);
-      left: 248px;
-      width: 28px;
-      height: 50px;
-      background: var(--nx-teal);
-      border: none;
-      border-radius: 0 .5rem .5rem 0;
-      box-shadow: 2px 2px 8px rgba(0,0,0,.15);
+      gap: .75rem;
       cursor: pointer;
-      z-index: 1001;
+      user-select: none;
+    }
+    .jira-card-header:hover { background: #F4F5F7; }
+    .jira-card-title {
+      font-size: .875rem;
+      font-weight: 600;
+      color: var(--jira-neutral-dark);
+      margin: 0;
+      flex-grow: 1;
+    }
+    .jira-card-badge {
+      background: var(--jira-blue);
+      color: #fff;
+      font-size: .7rem;
+      font-weight: 600;
+      padding: .125rem .5rem;
+      border-radius: 10px;
+    }
+    .jira-card-badge-warning { background: var(--jira-yellow); }
+    .jira-card-badge-danger { background: var(--jira-red); }
+    .jira-card-chevron { color: var(--jira-neutral-light); transition: transform .2s ease; }
+    .jira-card-header.collapsed .jira-card-chevron { transform: rotate(-90deg); }
+    .jira-card-body { padding: 0; }
+    
+    /* Tables */
+    .jira-table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+    .jira-table th {
+      font-size: .7rem;
+      font-weight: 600;
+      color: var(--jira-neutral-light);
+      text-transform: uppercase;
+      letter-spacing: .04em;
+      padding: .75rem 1rem;
+      text-align: left;
+      background: var(--jira-background);
+      border-bottom: 1px solid var(--jira-neutral-subtle);
+      position: sticky;
+      top: 0;
+    }
+    .jira-table td {
+      font-size: .875rem;
+      color: var(--jira-neutral-dark);
+      padding: .625rem 1rem;
+      border-bottom: 1px solid var(--jira-neutral-subtle);
+      vertical-align: middle;
+    }
+    .jira-table tr:hover { background: var(--jira-background); }
+    .jira-table tr:last-child td { border-bottom: none; }
+    .jira-table .cell-truncate {
+      max-width: 250px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .jira-table .key-nowrap { white-space: nowrap; font-weight: 500; color: var(--jira-blue); }
+    
+    /* Issue Type Icons */
+    .jira-issue-type {
+      display: inline-flex;
+      align-items: center;
+      gap: .375rem;
+    }
+    .jira-issue-icon {
+      width: 16px;
+      height: 16px;
+      border-radius: 3px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      font-size: .65rem;
+      color: #fff;
+    }
+    .jira-issue-icon-story { background: #63BA3C; }
+    .jira-issue-icon-bug { background: #E5493A; }
+    .jira-issue-icon-task { background: #4BADE8; }
+    .jira-issue-icon-subtask { background: #4BADE8; }
+    .jira-issue-icon-epic { background: #904EE2; }
+    .jira-issue-icon-default { background: var(--jira-neutral-light); }
+    
+    /* Priority Indicators */
+    .jira-priority {
+      display: inline-flex;
+      align-items: center;
+      gap: .375rem;
+    }
+    .jira-priority-icon {
+      width: 16px;
+      height: 16px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .jira-priority-icon i { font-size: .875rem; }
+    .priority-highest i, .priority-blocker i { color: #CD1316; }
+    .priority-high i, .priority-critical i { color: #E97F33; }
+    .priority-medium i { color: #EA7D24; }
+    .priority-low i { color: #2A8735; }
+    .priority-lowest i, .priority-minor i, .priority-trivial i { color: #57A55A; }
+    .priority-unknown i { color: var(--jira-neutral-light); }
+    
+    /* Status Badges */
+    .jira-status {
+      display: inline-block;
+      padding: .125rem .5rem;
+      border-radius: 3px;
+      font-size: .7rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: .02em;
+    }
+    .jira-status-todo { background: var(--jira-neutral-subtle); color: var(--jira-neutral-medium); }
+    .jira-status-inprogress { background: var(--jira-blue-light); color: var(--jira-blue); }
+    .jira-status-done { background: var(--jira-green-light); color: var(--jira-green); }
+    .jira-status-blocked { background: var(--jira-red-light); color: var(--jira-red); }
+    
+    /* Pagination */
+    .jira-pagination {
       display: flex;
       align-items: center;
       justify-content: center;
+      gap: .5rem;
+      padding: 1rem;
+      border-top: 1px solid var(--jira-neutral-subtle);
+      background: var(--jira-background);
+    }
+    .jira-pagination-btn {
+      padding: .375rem .625rem;
+      border-radius: 4px;
+      font-size: .8rem;
+      color: var(--jira-neutral-medium);
+      background: var(--jira-surface);
+      border: 1px solid var(--jira-neutral-subtle);
+      cursor: pointer;
+      transition: all .15s ease;
+    }
+    .jira-pagination-btn:hover:not(:disabled) { background: var(--jira-blue-subtle); color: var(--jira-blue); border-color: var(--jira-blue); }
+    .jira-pagination-btn:disabled { opacity: .5; cursor: not-allowed; }
+    .jira-pagination-info { font-size: .8rem; color: var(--jira-neutral-light); }
+    
+    /* Hidden utility */
+    .hidden { display: none !important; }
+    
+    /* Section visibility */
+    .jira-section { display: block; }
+    .jira-section.hidden { display: none; }
+    
+    /* Sprint badge */
+    .jira-sprint-badge {
+      background: var(--jira-purple);
       color: #fff;
-      font-size: 1rem;
-      transition: left .3s ease, background .2s;
-    }
-    .nx-table-index-toggle:hover {
-      background: var(--nx-teal-dark);
-    }
-    .nx-table-index-toggle.collapsed {
-      left: 8px;
-      border-radius: .5rem;
-    }
-    .nx-table-index-toggle i {
-      transition: transform .3s ease;
-    }
-    .nx-table-index-toggle.collapsed i {
-      transform: rotate(180deg);
-    }
-    .nx-table-index-list {
-      display: flex;
-      flex-direction: column;
-      gap: .4rem;
-      list-style: none;
-      margin: 0;
-      padding: 0;
-    }
-    .nx-table-index-item {
-      display: flex;
+      font-size: .7rem;
+      font-weight: 600;
+      padding: .25rem .625rem;
+      border-radius: 4px;
+      display: inline-flex;
       align-items: center;
       gap: .35rem;
-      background: var(--nx-teal-light);
-      border: 1px solid var(--nx-teal);
-      padding: .45rem .7rem;
-      border-radius: .5rem;
-      font-size: .75rem;
-      color: var(--nx-teal-dark);
-      cursor: pointer;
-      transition: background .15s, transform .1s;
-      text-decoration: none;
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
     }
-    .nx-table-index-item:hover { 
-      background: var(--nx-teal); 
-      color: #fff; 
-      transform: translateX(3px);
+    
+    /* Links */
+    .jira-link { color: var(--jira-blue); text-decoration: none; }
+    .jira-link:hover { text-decoration: underline; }
+    
+    /* Empty state */
+    .jira-empty {
+      text-align: center;
+      padding: 3rem 2rem;
+      color: var(--jira-neutral-light);
     }
-    .nx-table-index-item:focus-visible {
-      background: var(--nx-teal);
-      color: #fff;
-      outline: 2px solid var(--nx-teal-dark);
-      outline-offset: 2px;
+    .jira-empty-icon { font-size: 3rem; margin-bottom: 1rem; opacity: .5; }
+    .jira-empty-text { font-size: .95rem; }
+    
+    @media (max-width: 768px) {
+      .jira-sidebar { width: 48px; }
+      .jira-main { margin-left: 48px; }
+      .jira-kpi-grid { grid-template-columns: repeat(2, 1fr); }
+      .jira-tabs { overflow-x: auto; padding: 0 1rem; }
+      .jira-content { padding: 1rem; }
     }
-    .nx-table-index-item .badge {
-      background: var(--nx-teal-dark);
-      color: #fff;
-      font-size: .65rem;
-      padding: .1rem .35rem;
-      border-radius: .25rem;
-      margin-left: auto;
-      flex-shrink: 0;
-    }
-    /* Adjust main content to make room for floating menu */
-    @media (min-width: 992px) {
-      .nx-main-content {
-        margin-left: 250px;
-        transition: margin-left .3s ease;
-      }
-      .nx-main-content.menu-collapsed {
-        margin-left: 0;
-      }
-    }
-    @media (max-width: 991px) {
-      .nx-table-index {
-        position: static;
-        width: 100%;
-        max-height: none;
-        margin-bottom: 1.5rem;
-        transform: none;
-      }
-      .nx-table-index.collapsed {
-        left: 0;
-        display: none;
-      }
-      .nx-table-index-list {
-        flex-direction: row;
-        flex-wrap: wrap;
-      }
-      .nx-table-index-toggle {
-        display: none;
-      }
-    }
-
-    /* ── Hidden utility class ── */
-    .hidden { display: none !important; }
-
-    /* ── Section / accordion cards ── */
-    .section-card { border: none; border-radius: 1rem; box-shadow: 0 2px 12px rgba(0,0,0,.07); background: #fff; }
-    .section-card .card-header {
-      background: #fff;
-      border-bottom: 1px solid #e5e7eb;
-      border-radius: 1rem 1rem 0 0 !important;
-      cursor: pointer;
-      font-weight: 600;
-      font-size: .95rem;
-      user-select: none;
-    }
-    .section-card .card-header:hover { background: var(--nx-teal-light); }
-    .section-card .card-header .chevron { transition: transform .2s; }
-    .section-card .card-header.collapsed .chevron { transform: rotate(-90deg); }
-    .table th { background: #f8f9fa; font-size: .8rem; color: #374151; text-transform: uppercase; letter-spacing: .04em; }
-    .table td { font-size: .87rem; vertical-align: middle; }
-    .table td.cell-truncate {
-      max-width: 200px;
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
-    }
-    .badge-count { font-size: .88rem; font-weight: 700; }
-
-    /* ── Priority indicators ── */
-    .priority-indicator {
-      display: inline-block;
-      width: 10px;
-      height: 10px;
-      border-radius: 50%;
-      margin-right: 6px;
-      vertical-align: middle;
-    }
-    .priority-blocker { background: #dc2626; } /* Red */
-    .priority-critical { background: #ea580c; } /* Orange */
-    .priority-high { background: #f97316; } /* Light orange */
-    .priority-medium { background: #eab308; } /* Yellow */
-    .priority-low { background: #22c55e; } /* Green */
-    .priority-minor { background: #22c55e; } /* Green */
-    .priority-trivial { background: #22c55e; } /* Green */
-    .priority-unknown { background: #9ca3af; } /* Gray */
-
-    /* ── Key column no-wrap ── */
-    .key-nowrap { white-space: nowrap; }
-
-    /* ── Pagination ── */
-    .nx-pagination { display: flex; align-items: center; gap: .5rem; padding: .75rem 1rem; font-size: .85rem; }
-    .nx-pagination .page-info { color: #6b7280; }
   </style>
 </head>
 <body>
 
-<!-- Top bar -->
-<div class="nx-topbar">
-  <div class="container-fluid d-flex align-items-center gap-3" style="max-width: 1400px;">
-    <div class="nx-logo-circle">
-      <svg viewBox="0 0 28 28" fill="none" xmlns="http://www.w3.org/2000/svg">
-        <path d="M4 4L14 14M14 14L24 4M14 14L4 24M14 14L24 24" stroke="#00BFA6" stroke-width="3.5" stroke-linecap="round"/>
-      </svg>
-    </div>
+<!-- Jira-style Sidebar -->
+<nav class="jira-sidebar">
+  <div class="jira-logo">
+    <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <path d="M11.998 2L6.998 7H10.5V11.5H6.998L11.998 16.5L16.998 11.5H13.5V7H16.998L11.998 2Z" fill="#0052CC"/>
+      <path d="M11.998 22L6.998 17H10.5V12.5H6.998L11.998 7.5L16.998 12.5H13.5V17H16.998L11.998 22Z" fill="#2684FF"/>
+    </svg>
+  </div>
+  <a href="/" class="jira-nav-item" title="Home">
+    <i class="bi bi-house-door"></i>
+  </a>
+  <a href="/" class="jira-nav-item active" title="Reports">
+    <i class="bi bi-bar-chart-line"></i>
+  </a>
+  <a href="/" class="jira-nav-item" title="Backlog">
+    <i class="bi bi-list-task"></i>
+  </a>
+  <a href="/" class="jira-nav-item" title="Sprints">
+    <i class="bi bi-lightning-charge"></i>
+  </a>
+</nav>
+
+<main class="jira-main">
+  <!-- Header -->
+  <header class="jira-header">
     <div class="flex-grow-1">
-      <div class="nx-topbar-title">SPRINT KPI DASHBOARD</div>
-      <div class="nx-topbar-sub">Capacité : {{ kpis.capacity_days }}j &nbsp;·&nbsp; Jours logués : {{ kpis.total_logged_days }}j</div>
+      <div class="jira-breadcrumb">
+        <a href="/">Projects</a>
+        <i class="bi bi-chevron-right" style="font-size:.5rem;"></i>
+        <span>Sprint KPI</span>
+        <i class="bi bi-chevron-right" style="font-size:.5rem;"></i>
+        <span>Dashboard</span>
+      </div>
+      <h1 class="jira-header-title">Sprint KPI Dashboard</h1>
+      <p class="jira-header-subtitle">Capacity: {{ kpis.capacity_days }} days · Logged: {{ kpis.total_logged_days }} days</p>
     </div>
-    <div class="d-flex gap-2 flex-wrap justify-content-end">
-      <a href="/download/{{ report_filename }}" class="btn btn-sm btn-nx">
+    <div class="d-flex gap-2">
+      <a href="/download/{{ report_filename }}" class="jira-btn jira-btn-primary">
         <i class="bi bi-download"></i> Export Excel
       </a>
-      <a href="/" class="btn btn-sm btn-nx-outline" style="color:#fff; border-color:rgba(255,255,255,.6);">
-        <i class="bi bi-arrow-repeat"></i> Nouveau fichier
+      <a href="/" class="jira-btn jira-btn-secondary">
+        <i class="bi bi-arrow-repeat"></i> New Analysis
       </a>
     </div>
-  </div>
-</div>
-
-<div class="container-fluid pb-5 pt-4" style="max-width: 1400px;">
-
-  <!-- Hero card: Capacity Utilization — always visible -->
-  <div class="hero-kpi-card mb-4"
-       data-bs-toggle="tooltip"
-       data-bs-placement="bottom"
-       title="Total heures loguées / Capacité équipe × 100">
-    <div class="row align-items-center">
-      <div class="col-auto">
-        <div class="hero-kpi-value">{{ kpis.capacity_util }}%</div>
-        <div class="hero-kpi-label">Capacity utilization</div>
-        <div class="hero-kpi-sub">{{ kpis.total_logged_days }}j logués sur {{ kpis.capacity_days }}j</div>
-      </div>
-      <div class="col">
-        <div class="progress progress-hero mt-3">
-          <div class="progress-bar" style="width: {{ [kpis.capacity_util, 100] | min }}%"></div>
-        </div>
-        <div class="d-flex justify-content-between mt-1" style="font-size:.78rem;opacity:.75;">
-          <span>0%</span>
-          <span>100%</span>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <!-- Horizontal Navigation Menu -->
-  <div class="nx-nav-horizontal">
-    <span class="nx-nav-title">Navigation</span>
-    <a href="javascript:void(0)" class="nx-nav-item active" onclick="nxNav('overview', this)"><i class="bi bi-bar-chart"></i> Vue d'ensemble</a>
+  </header>
+  
+  <!-- Tabs Navigation -->
+  <div class="jira-tabs">
+    <a href="javascript:void(0)" class="jira-tab active" onclick="switchTab('overview', this)">
+      <i class="bi bi-grid-3x3-gap"></i> Overview
+    </a>
     {% if resolution_rows %}
-    <a href="javascript:void(0)" class="nx-nav-item" onclick="nxNav('resolution', this)"><i class="bi bi-hourglass-split"></i> Temps de résolution</a>
+    <a href="javascript:void(0)" class="jira-tab" onclick="switchTab('resolution', this)">
+      <i class="bi bi-hourglass-split"></i> Resolution Time
+      <span class="jira-tab-badge">{{ resolution_rows | length }}</span>
+    </a>
     {% endif %}
     {% if wip_rows %}
-    <a href="javascript:void(0)" class="nx-nav-item" onclick="nxNav('wip', this)"><i class="bi bi-arrow-repeat"></i> WIP End Sprint</a>
+    <a href="javascript:void(0)" class="jira-tab" onclick="switchTab('wip', this)">
+      <i class="bi bi-arrow-repeat"></i> WIP
+      <span class="jira-tab-badge">{{ wip_rows | length }}</span>
+    </a>
     {% endif %}
     {% if no_est_rows %}
-    <a href="javascript:void(0)" class="nx-nav-item" onclick="nxNav('noest', this)"><i class="bi bi-exclamation-triangle"></i> Sans estimation</a>
+    <a href="javascript:void(0)" class="jira-tab" onclick="switchTab('noest', this)">
+      <i class="bi bi-exclamation-triangle"></i> No Estimate
+      <span class="jira-tab-badge">{{ no_est_rows | length }}</span>
+    </a>
     {% endif %}
     {% if no_tempo_rows %}
-    <a href="javascript:void(0)" class="nx-nav-item" onclick="nxNav('notempo', this)"><i class="bi bi-stopwatch"></i> Sans tempo</a>
+    <a href="javascript:void(0)" class="jira-tab" onclick="switchTab('notempo', this)">
+      <i class="bi bi-clock-history"></i> No Worklog
+      <span class="jira-tab-badge">{{ no_tempo_rows | length }}</span>
+    </a>
     {% endif %}
   </div>
-
-  <!-- Floating Table Reference Index (Left Side) -->
-  <div class="nx-table-index" id="table-ref-index">
-    <div class="nx-table-index-title"><i class="bi bi-list-ul" aria-hidden="true"></i> Tableaux</div>
-    <ul class="nx-table-index-list">
+  
+  <div class="jira-content">
+    
+    <!-- ═══════════════════════════════════════════════════════════════ -->
+    <!-- SECTION: Overview -->
+    <!-- ═══════════════════════════════════════════════════════════════ -->
+    <div id="section-overview" class="jira-section">
+      
+      <!-- Hero Card: Capacity Utilization -->
+      <div class="jira-hero-card">
+        <div class="row align-items-center">
+          <div class="col-auto">
+            <div class="jira-hero-value">{{ kpis.capacity_util }}%</div>
+            <div class="jira-hero-label">Capacity Utilization</div>
+            <div class="jira-hero-sub">{{ kpis.total_logged_days }} days logged of {{ kpis.capacity_days }} days capacity</div>
+          </div>
+          <div class="col">
+            <div class="jira-hero-progress">
+              <div class="jira-hero-progress-bar" style="width: {{ [kpis.capacity_util, 100] | min }}%"></div>
+            </div>
+            <div class="d-flex justify-content-between mt-1" style="font-size:.75rem;opacity:.7;">
+              <span>0%</span>
+              <span>100%</span>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <!-- KPI Cards Grid -->
+      <div class="jira-kpi-grid">
+        
+        <!-- Throughput -->
+        <div class="jira-kpi-card" title="Tickets resolved (status: closed, done, released, customer pending)">
+          <div class="jira-kpi-icon status-green"><i class="bi bi-check-circle-fill"></i></div>
+          <div class="jira-kpi-value status-green">{{ kpis.throughput }}</div>
+          <div class="jira-kpi-label">Throughput (Resolved)</div>
+        </div>
+        
+        <!-- WIP -->
+        <div class="jira-kpi-card" title="Tickets still in progress at sprint end">
+          <div class="jira-kpi-icon {% if kpis.wip_count == 0 %}status-green{% elif kpis.wip_count <= 5 %}status-yellow{% else %}status-red{% endif %}">
+            <i class="bi bi-arrow-repeat"></i>
+          </div>
+          <div class="jira-kpi-value {% if kpis.wip_count == 0 %}status-green{% elif kpis.wip_count <= 5 %}status-yellow{% else %}status-red{% endif %}">
+            {{ kpis.wip_count }}
+          </div>
+          <div class="jira-kpi-label">WIP End Sprint</div>
+        </div>
+        
+        <!-- No Estimation -->
+        <div class="jira-kpi-card" title="Tickets without original estimate">
+          <div class="jira-kpi-icon {% if kpis.no_est_count == 0 %}status-green{% elif kpis.no_est_count <= 3 %}status-yellow{% else %}status-red{% endif %}">
+            <i class="bi bi-exclamation-triangle-fill"></i>
+          </div>
+          <div class="jira-kpi-value {% if kpis.no_est_count == 0 %}status-green{% elif kpis.no_est_count <= 3 %}status-yellow{% else %}status-red{% endif %}">
+            {{ kpis.no_est_count }}
+          </div>
+          <div class="jira-kpi-label">No Estimate</div>
+        </div>
+        
+        <!-- No Tempo -->
+        <div class="jira-kpi-card" title="Tickets without tempo worklog">
+          <div class="jira-kpi-icon {% if kpis.no_tempo_count == 0 %}status-green{% elif kpis.no_tempo_count <= 3 %}status-yellow{% else %}status-red{% endif %}">
+            <i class="bi bi-clock-history"></i>
+          </div>
+          <div class="jira-kpi-value {% if kpis.no_tempo_count == 0 %}status-green{% elif kpis.no_tempo_count <= 3 %}status-yellow{% else %}status-red{% endif %}">
+            {{ kpis.no_tempo_count }}
+          </div>
+          <div class="jira-kpi-label">No Worklog</div>
+        </div>
+        
+        <!-- Days Logged -->
+        <div class="jira-kpi-card" title="Total tempo hours / 8">
+          <div class="jira-kpi-icon status-blue"><i class="bi bi-calendar-check"></i></div>
+          <div class="jira-kpi-value status-blue">{{ kpis.total_logged_days }}</div>
+          <div class="jira-kpi-label">Days Logged</div>
+        </div>
+        
+        <!-- Avg Resolution Time -->
+        {% if kpis.avg_resolution_days is not none %}
+        <div class="jira-kpi-card" title="Average (resolution date - first worklog date) in days">
+          <div class="jira-kpi-icon {% if kpis.avg_resolution_days <= 5 %}status-green{% elif kpis.avg_resolution_days <= 15 %}status-yellow{% else %}status-red{% endif %}">
+            <i class="bi bi-hourglass-split"></i>
+          </div>
+          <div class="jira-kpi-value {% if kpis.avg_resolution_days <= 5 %}status-green{% elif kpis.avg_resolution_days <= 15 %}status-yellow{% else %}status-red{% endif %}">
+            {{ kpis.avg_resolution_days }}d
+          </div>
+          <div class="jira-kpi-label">Avg Resolution Time</div>
+        </div>
+        {% endif %}
+        
+      </div>
+      
+      <!-- Time per Project (Totals) -->
       {% if project_totals_rows %}
-      <li data-section="overview"><a href="#tbl-anchor-projects-totals" class="nx-table-index-item">
-        <i class="bi bi-folder" aria-hidden="true"></i> Temps par projet
-        <span class="badge" aria-label="{{ project_totals_rows | length }} lignes">{{ project_totals_rows | length }}</span>
-      </a></li>
+      <div class="jira-card">
+        <div class="jira-card-header" data-bs-toggle="collapse" data-bs-target="#tbl-project-totals" aria-expanded="true">
+          <i class="bi bi-folder" style="color:var(--jira-blue);"></i>
+          <h3 class="jira-card-title">Time per Project</h3>
+          <span class="jira-card-badge">{{ project_totals_rows | length }}</span>
+          <i class="bi bi-chevron-down jira-card-chevron"></i>
+        </div>
+        <div id="tbl-project-totals" class="collapse show">
+          <div class="jira-card-body">
+            <div class="table-responsive">
+              <table class="jira-table">
+                <thead>
+                  <tr>
+                    {% for col in project_totals_rows[0].keys() %}
+                    <th>{{ col }}</th>
+                    {% endfor %}
+                  </tr>
+                </thead>
+                <tbody>
+                  {% for row in project_totals_rows %}
+                  <tr>
+                    {% for key, val in row.items() %}
+                    <td class="{% if 'Key' in key or 'Clé' in key or key == 'Projet' or key == 'Project' %}key-nowrap{% endif %}" title="{{ val }}">{{ val }}</td>
+                    {% endfor %}
+                  </tr>
+                  {% endfor %}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
       {% endif %}
+      
+      <!-- Time per Project & Priority -->
       {% if project_priority_rows %}
-      <li data-section="overview"><a href="#tbl-anchor-projects-priority" class="nx-table-index-item">
-        <i class="bi bi-bar-chart" aria-hidden="true"></i> Projet & priorité
-        <span class="badge" aria-label="{{ project_priority_rows | length }} lignes">{{ project_priority_rows | length }}</span>
-      </a></li>
-      {% endif %}
-      {% if wip_rows %}
-      <li data-section="wip"><a href="#tbl-anchor-wip" class="nx-table-index-item">
-        <i class="bi bi-arrow-repeat" aria-hidden="true"></i> WIP End Sprint
-        <span class="badge" aria-label="{{ wip_rows | length }} lignes">{{ wip_rows | length }}</span>
-      </a></li>
-      {% endif %}
-      {% if no_est_rows %}
-      <li data-section="noest"><a href="#tbl-anchor-noest" class="nx-table-index-item">
-        <i class="bi bi-exclamation-triangle" aria-hidden="true"></i> Sans estimation
-        <span class="badge" aria-label="{{ no_est_rows | length }} lignes">{{ no_est_rows | length }}</span>
-      </a></li>
-      {% endif %}
-      {% if no_tempo_rows %}
-      <li data-section="notempo"><a href="#tbl-anchor-notempo" class="nx-table-index-item">
-        <i class="bi bi-stopwatch" aria-hidden="true"></i> Sans tempo
-        <span class="badge" aria-label="{{ no_tempo_rows | length }} lignes">{{ no_tempo_rows | length }}</span>
-      </a></li>
-      {% endif %}
-      {% if resolution_rows %}
-      <li data-section="resolution"><a href="#tbl-anchor-resolution" class="nx-table-index-item">
-        <i class="bi bi-hourglass-split" aria-hidden="true"></i> Temps de résolution
-        <span class="badge" aria-label="{{ resolution_rows | length }} lignes">{{ resolution_rows | length }}</span>
-      </a></li>
-      {% endif %}
-    </ul>
-  </div>
-
-  <!-- Toggle button for collapsible table reference menu -->
-  <button class="nx-table-index-toggle" id="table-index-toggle" onclick="toggleTableIndex()" title="Masquer/Afficher le menu des tableaux" aria-label="Masquer/Afficher le menu des tableaux">
-    <i class="bi bi-chevron-left" aria-hidden="true"></i>
-  </button>
-
-  <!-- Main content (full width) -->
-  <div class="row g-4 nx-main-content">
-    <div class="col-12">
-
-      <!-- ══ Section: Vue d'ensemble ══ -->
-      <div id="section-overview" class="nx-section">
-
-        <!-- KPI Cards grid -->
-        <div class="row g-3 mb-4">
-
-          <!-- Throughput -->
-          <div class="col-6 col-md-4 col-xl-3">
-            <div class="kpi-card card p-3 text-center"
-                 data-bs-toggle="tooltip"
-                 data-bs-placement="top"
-                 title="Nombre de tickets résolus (status : closed, done, released, customer pending)">
-              <div class="kpi-icon"><i class="bi bi-check-circle"></i></div>
-              <div class="kpi-value color-green">{{ kpis.throughput }}</div>
-              <div class="kpi-label">Throughput (résolus)</div>
-            </div>
-          </div>
-
-          <!-- WIP -->
-          <div class="col-6 col-md-4 col-xl-3">
-            <div class="kpi-card card p-3 text-center"
-                 data-bs-toggle="tooltip"
-                 data-bs-placement="top"
-                 title="Nombre de tickets encore en cours à la fin du sprint (status : In Progress, In Review, etc.)">
-              <div class="kpi-icon"><i class="bi bi-arrow-repeat"></i></div>
-              <div class="kpi-value
-                {% if kpis.wip_count == 0 %}color-green
-                {% elif kpis.wip_count <= 5 %}color-yellow
-                {% else %}color-red{% endif %}">
-                {{ kpis.wip_count }}
-              </div>
-              <div class="kpi-label">Wip end sprint</div>
-            </div>
-          </div>
-
-          <!-- Sans Estimation -->
-          <div class="col-6 col-md-4 col-xl-3">
-            <div class="kpi-card card p-3 text-center"
-                 data-bs-toggle="tooltip"
-                 data-bs-placement="top"
-                 title="Nombre de tickets sans estimation d'effort (Original Estimate vide ou 0)">
-              <div class="kpi-icon"><i class="bi bi-exclamation-triangle"></i></div>
-              <div class="kpi-value
-                {% if kpis.no_est_count == 0 %}color-green
-                {% elif kpis.no_est_count <= 3 %}color-yellow
-                {% else %}color-red{% endif %}">
-                {{ kpis.no_est_count }}
-              </div>
-              <div class="kpi-label">Sans estimation</div>
-            </div>
-          </div>
-
-          <!-- Sans Tempo -->
-          <div class="col-6 col-md-4 col-xl-3">
-            <div class="kpi-card card p-3 text-center"
-                 data-bs-toggle="tooltip"
-                 data-bs-placement="top"
-                 title="Nombre de tickets sans worklog Tempo associé">
-              <div class="kpi-icon"><i class="bi bi-stopwatch"></i></div>
-              <div class="kpi-value
-                {% if kpis.no_tempo_count == 0 %}color-green
-                {% elif kpis.no_tempo_count <= 3 %}color-yellow
-                {% else %}color-red{% endif %}">
-                {{ kpis.no_tempo_count }}
-              </div>
-              <div class="kpi-label">Sans tempo</div>
-            </div>
-          </div>
-
-          <!-- Jours logués -->
-          <div class="col-6 col-md-4 col-xl-3">
-            <div class="kpi-card card p-3 text-center"
-                 data-bs-toggle="tooltip"
-                 data-bs-placement="top"
-                 title="Somme des heures Tempo / 8">
-              <div class="kpi-icon"><i class="bi bi-clock"></i></div>
-              <div class="kpi-value color-teal">{{ kpis.total_logged_days }}</div>
-              <div class="kpi-label">Jours logués (j)</div>
-            </div>
-          </div>
-
-          <!-- Temps moyen de résolution -->
-          {% if kpis.avg_resolution_days is not none %}
-          <div class="col-6 col-md-4 col-xl-3">
-            <div class="kpi-card card p-3 text-center"
-                 data-bs-toggle="tooltip"
-                 data-bs-placement="top"
-                 title="Moyenne de (Date résolution - Date 1er worklog Tempo) en jours">
-              <div class="kpi-icon"><i class="bi bi-hourglass-split"></i></div>
-              <div class="kpi-value
-                {% if kpis.avg_resolution_days <= 5 %}color-green
-                {% elif kpis.avg_resolution_days <= 15 %}color-yellow
-                {% else %}color-red{% endif %}">
-                {{ kpis.avg_resolution_days }}j
-              </div>
-              <div class="kpi-label">Temps moyen de résolution</div>
-            </div>
-          </div>
-          {% endif %}
-
-        </div><!-- /row g-3 -->
-
-        <!-- Temps passé par projet (totaux) -->
-        {% if project_totals_rows %}
-        <div id="tbl-anchor-projects-totals" class="section-card card mb-4">
-          <div class="card-header d-flex align-items-center gap-2" data-bs-toggle="collapse" data-bs-target="#tbl-projects-totals" aria-expanded="true">
-            <span class="chevron">▼</span>
-            <i class="bi bi-folder"></i> Temps passé par projet (totaux)
-            <span class="badge ms-1 badge-count" style="background:var(--nx-teal);">{{ project_totals_rows | length }}</span>
-          </div>
-          <div id="tbl-projects-totals" class="collapse show">
-            <div class="card-body p-0">
-              <div class="table-responsive">
-                <table class="table table-sm table-hover mb-0">
-                  <thead>
-                    <tr>
-                      {% for col in project_totals_rows[0].keys() %}
-                      <th>{{ col }}</th>
-                      {% endfor %}
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {% for row in project_totals_rows %}
-                    <tr>
-                      {% for key, val in row.items() %}
-                      <td class="cell-truncate{% if 'Key' in key or 'Clé' in key or key == 'Projet' %} key-nowrap{% endif %}" title="{{ val }}">{{ val }}</td>
-                      {% endfor %}
-                    </tr>
-                    {% endfor %}
-                  </tbody>
-                </table>
-              </div>
-            </div>
-          </div>
+      <div class="jira-card">
+        <div class="jira-card-header" data-bs-toggle="collapse" data-bs-target="#tbl-project-priority" aria-expanded="true">
+          <i class="bi bi-bar-chart-fill" style="color:var(--jira-purple);"></i>
+          <h3 class="jira-card-title">Time per Project & Priority</h3>
+          <span class="jira-card-badge">{{ project_priority_rows | length }}</span>
+          <i class="bi bi-chevron-down jira-card-chevron"></i>
         </div>
-        {% endif %}
-
-        <!-- Temps passé par projet et priorité -->
-        {% if project_priority_rows %}
-        <div id="tbl-anchor-projects-priority" class="section-card card mb-4">
-          <div class="card-header d-flex align-items-center gap-2" data-bs-toggle="collapse" data-bs-target="#tbl-projects-priority" aria-expanded="true">
-            <span class="chevron">▼</span>
-            <i class="bi bi-bar-chart"></i> Temps passé par projet et priorité
-            <span class="badge ms-1 badge-count" style="background:var(--nx-teal);">{{ project_priority_rows | length }}</span>
-          </div>
-          <div id="tbl-projects-priority" class="collapse show">
-            <div class="card-body p-0">
-              <div class="table-responsive">
-                <table class="table table-sm table-hover mb-0">
-                  <thead>
-                    <tr>
-                      {% for col in project_priority_rows[0].keys() %}
-                      <th>{{ col }}</th>
-                      {% endfor %}
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {% for row in project_priority_rows %}
-                    <tr>
-                      {% for key, val in row.items() %}
-                      <td class="cell-truncate{% if 'Key' in key or 'Clé' in key or key == 'Projet' %} key-nowrap{% endif %}" title="{{ val }}">
-                        {% if key == 'Priorité' %}
-                          {% set prio_lower = val|lower %}
-                          {% if prio_lower == 'blocker' %}
-                            <span class="priority-indicator priority-blocker" title="Blocker"></span>
-                          {% elif prio_lower == 'critical' %}
-                            <span class="priority-indicator priority-critical" title="Critical"></span>
-                          {% elif prio_lower == 'high' %}
-                            <span class="priority-indicator priority-high" title="High"></span>
-                          {% elif prio_lower == 'medium' %}
-                            <span class="priority-indicator priority-medium" title="Medium"></span>
-                          {% elif prio_lower == 'low' %}
-                            <span class="priority-indicator priority-low" title="Low"></span>
-                          {% elif prio_lower == 'minor' %}
-                            <span class="priority-indicator priority-minor" title="Minor"></span>
-                          {% elif prio_lower == 'trivial' %}
-                            <span class="priority-indicator priority-trivial" title="Trivial"></span>
-                          {% else %}
-                            <span class="priority-indicator priority-unknown" title="Unknown"></span>
-                          {% endif %}
-                          {{ val }}
-                        {% else %}
-                          {{ val }}
-                        {% endif %}
-                      </td>
-                      {% endfor %}
-                    </tr>
-                    {% endfor %}
-                  </tbody>
-                </table>
-              </div>
-            </div>
-          </div>
-        </div>
-        {% endif %}
-
-      </div><!-- /section-overview -->
-
-      <!-- ══ Section: WIP ══ -->
-      {% if wip_rows %}
-      <div id="section-wip" class="nx-section hidden">
-        <div id="tbl-anchor-wip" class="section-card card mb-3">
-          <div class="card-header d-flex align-items-center gap-2">
-            <i class="bi bi-arrow-repeat"></i> WIP End Sprint
-            <span class="badge ms-1 badge-count bg-secondary">{{ wip_rows | length }}</span>
-          </div>
-          <div class="card-body p-0">
+        <div id="tbl-project-priority" class="collapse show">
+          <div class="jira-card-body">
             <div class="table-responsive">
-              <table class="table table-sm table-hover mb-0" id="table-wip">
+              <table class="jira-table">
                 <thead>
                   <tr>
-                    {% for col in wip_rows[0].keys() %}
+                    {% for col in project_priority_rows[0].keys() %}
                     <th>{{ col }}</th>
                     {% endfor %}
                   </tr>
                 </thead>
                 <tbody>
-                  {% for row in wip_rows %}
+                  {% for row in project_priority_rows %}
                   <tr>
                     {% for key, val in row.items() %}
-                    <td class="cell-truncate{% if 'Key' in key or 'Clé' in key %} key-nowrap{% endif %}" title="{{ val }}">{{ val }}</td>
-                    {% endfor %}
-                  </tr>
-                  {% endfor %}
-                </tbody>
-              </table>
-            </div>
-            <div class="nx-pagination" id="pag-wip"></div>
-          </div>
-        </div>
-      </div>
-      {% endif %}
-
-      <!-- ══ Section: Sans estimation ══ -->
-      {% if no_est_rows %}
-      <div id="section-noest" class="nx-section hidden">
-        <div id="tbl-anchor-noest" class="section-card card mb-3">
-          <div class="card-header d-flex align-items-center gap-2">
-            <i class="bi bi-exclamation-triangle"></i> Tickets sans estimation
-            <span class="badge ms-1 badge-count bg-danger">{{ no_est_rows | length }}</span>
-          </div>
-          <div class="card-body p-0">
-            <div class="table-responsive">
-              <table class="table table-sm table-hover mb-0" id="table-noest">
-                <thead>
-                  <tr>
-                    {% for col in no_est_rows[0].keys() %}
-                    <th>{{ col }}</th>
-                    {% endfor %}
-                  </tr>
-                </thead>
-                <tbody>
-                  {% for row in no_est_rows %}
-                  <tr>
-                    {% for key, val in row.items() %}
-                    <td class="cell-truncate{% if 'Key' in key or 'Clé' in key %} key-nowrap{% endif %}" title="{{ val }}">{{ val }}</td>
-                    {% endfor %}
-                  </tr>
-                  {% endfor %}
-                </tbody>
-              </table>
-            </div>
-            <div class="nx-pagination" id="pag-noest"></div>
-          </div>
-        </div>
-      </div>
-      {% endif %}
-
-      <!-- ══ Section: Sans tempo ══ -->
-      {% if no_tempo_rows %}
-      <div id="section-notempo" class="nx-section hidden">
-        <div id="tbl-anchor-notempo" class="section-card card mb-3">
-          <div class="card-header d-flex align-items-center gap-2">
-            <i class="bi bi-stopwatch"></i> Tickets sans tempo (sans worklog)
-            <span class="badge ms-1 badge-count bg-danger">{{ no_tempo_rows | length }}</span>
-          </div>
-          <div class="card-body p-0">
-            <div class="table-responsive">
-              <table class="table table-sm table-hover mb-0" id="table-notempo">
-                <thead>
-                  <tr>
-                    {% for col in no_tempo_rows[0].keys() %}
-                    <th>{{ col }}</th>
-                    {% endfor %}
-                  </tr>
-                </thead>
-                <tbody>
-                  {% for row in no_tempo_rows %}
-                  <tr>
-                    {% for key, val in row.items() %}
-                    <td class="cell-truncate{% if 'Key' in key or 'Clé' in key %} key-nowrap{% endif %}" title="{{ val }}">{{ val }}</td>
-                    {% endfor %}
-                  </tr>
-                  {% endfor %}
-                </tbody>
-              </table>
-            </div>
-            <div class="nx-pagination" id="pag-notempo"></div>
-          </div>
-        </div>
-      </div>
-      {% endif %}
-
-      <!-- ══ Section: Temps de résolution ══ -->
-      {% if resolution_rows %}
-      <div id="section-resolution" class="nx-section hidden">
-        <div id="tbl-anchor-resolution" class="section-card card mb-3">
-          <div class="card-header d-flex align-items-center gap-2">
-            <i class="bi bi-hourglass-split"></i> Temps de résolution par ticket
-            <span class="badge ms-1 badge-count" style="background:var(--nx-teal);">{{ resolution_rows | length }}</span>
-          </div>
-          <div class="card-body p-0">
-            <div class="table-responsive">
-              <table class="table table-sm table-hover mb-0" id="table-resolution">
-                <thead>
-                  <tr>
-                    {% for col in resolution_rows[0].keys() %}
-                    <th>{{ col }}</th>
-                    {% endfor %}
-                  </tr>
-                </thead>
-                <tbody>
-                  {% for row in resolution_rows %}
-                  <tr>
-                    {% for key, val in row.items() %}
-                    <td class="cell-truncate{% if 'Key' in key or 'Clé' in key %} key-nowrap{% endif %}" title="{{ val }}">
-                      {% if key == 'Priorité' %}
+                    <td class="{% if 'Key' in key or 'Clé' in key or key == 'Projet' or key == 'Project' %}key-nowrap{% endif %}" title="{{ val }}">
+                      {% if key == 'Priorité' or key == 'Priority' %}
                         {% set prio_lower = val|lower %}
-                        {% if prio_lower == 'blocker' %}
-                          <span class="priority-indicator priority-blocker" title="Blocker"></span>
-                        {% elif prio_lower == 'critical' %}
-                          <span class="priority-indicator priority-critical" title="Critical"></span>
-                        {% elif prio_lower == 'high' or prio_lower == 'highest' %}
-                          <span class="priority-indicator priority-high" title="High"></span>
-                        {% elif prio_lower == 'medium' %}
-                          <span class="priority-indicator priority-medium" title="Medium"></span>
-                        {% elif prio_lower == 'low' %}
-                          <span class="priority-indicator priority-low" title="Low"></span>
-                        {% elif prio_lower == 'minor' or prio_lower == 'lowest' %}
-                          <span class="priority-indicator priority-minor" title="Minor"></span>
-                        {% elif prio_lower == 'trivial' %}
-                          <span class="priority-indicator priority-trivial" title="Trivial"></span>
-                        {% else %}
-                          <span class="priority-indicator priority-unknown" title="Unknown"></span>
-                        {% endif %}
-                        {{ val }}
+                        <span class="jira-priority">
+                          <span class="jira-priority-icon priority-{{ prio_lower }}">
+                            {% if prio_lower == 'blocker' or prio_lower == 'highest' %}
+                              <i class="bi bi-chevron-double-up"></i>
+                            {% elif prio_lower == 'critical' or prio_lower == 'high' %}
+                              <i class="bi bi-chevron-up"></i>
+                            {% elif prio_lower == 'medium' %}
+                              <i class="bi bi-dash"></i>
+                            {% elif prio_lower == 'low' %}
+                              <i class="bi bi-chevron-down"></i>
+                            {% elif prio_lower == 'minor' or prio_lower == 'lowest' or prio_lower == 'trivial' %}
+                              <i class="bi bi-chevron-double-down"></i>
+                            {% else %}
+                              <i class="bi bi-question"></i>
+                            {% endif %}
+                          </span>
+                          {{ val }}
+                        </span>
                       {% else %}
                         {{ val }}
                       {% endif %}
@@ -805,145 +676,279 @@
                 </tbody>
               </table>
             </div>
-            <div class="nx-pagination" id="pag-resolution"></div>
           </div>
         </div>
       </div>
       {% endif %}
+      
+    </div><!-- /section-overview -->
+    
+    <!-- ═══════════════════════════════════════════════════════════════ -->
+    <!-- SECTION: WIP -->
+    <!-- ═══════════════════════════════════════════════════════════════ -->
+    {% if wip_rows %}
+    <div id="section-wip" class="jira-section hidden">
+      <div class="jira-card">
+        <div class="jira-card-header">
+          <i class="bi bi-arrow-repeat" style="color:var(--jira-yellow);"></i>
+          <h3 class="jira-card-title">Work In Progress (End Sprint)</h3>
+          <span class="jira-card-badge jira-card-badge-warning">{{ wip_rows | length }}</span>
+        </div>
+        <div class="jira-card-body">
+          <div class="table-responsive" style="max-height: 500px; overflow-y: auto;">
+            <table class="jira-table" id="table-wip">
+              <thead>
+                <tr>
+                  {% for col in wip_rows[0].keys() %}
+                  <th>{{ col }}</th>
+                  {% endfor %}
+                </tr>
+              </thead>
+              <tbody>
+                {% for row in wip_rows %}
+                <tr>
+                  {% for key, val in row.items() %}
+                  <td class="cell-truncate{% if 'Key' in key or 'Clé' in key %} key-nowrap{% endif %}" title="{{ val }}">
+                    {% if key == 'Status' or key == 'Statut' %}
+                      {% set status_lower = val|lower %}
+                      <span class="jira-status {% if 'progress' in status_lower or 'review' in status_lower %}jira-status-inprogress{% elif 'done' in status_lower or 'closed' in status_lower or 'resolved' in status_lower %}jira-status-done{% elif 'blocked' in status_lower %}jira-status-blocked{% else %}jira-status-todo{% endif %}">{{ val }}</span>
+                    {% elif key == 'Priority' or key == 'Priorité' %}
+                      {% set prio_lower = val|lower %}
+                      <span class="jira-priority">
+                        <span class="jira-priority-icon priority-{{ prio_lower }}">
+                          {% if prio_lower == 'blocker' or prio_lower == 'highest' %}<i class="bi bi-chevron-double-up"></i>
+                          {% elif prio_lower == 'critical' or prio_lower == 'high' %}<i class="bi bi-chevron-up"></i>
+                          {% elif prio_lower == 'medium' %}<i class="bi bi-dash"></i>
+                          {% elif prio_lower == 'low' %}<i class="bi bi-chevron-down"></i>
+                          {% else %}<i class="bi bi-chevron-double-down"></i>{% endif %}
+                        </span>
+                        {{ val }}
+                      </span>
+                    {% else %}
+                      {{ val }}
+                    {% endif %}
+                  </td>
+                  {% endfor %}
+                </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+        </div>
+        <div class="jira-pagination" id="pag-wip"></div>
+      </div>
+    </div>
+    {% endif %}
+    
+    <!-- ═══════════════════════════════════════════════════════════════ -->
+    <!-- SECTION: No Estimation -->
+    <!-- ═══════════════════════════════════════════════════════════════ -->
+    {% if no_est_rows %}
+    <div id="section-noest" class="jira-section hidden">
+      <div class="jira-card">
+        <div class="jira-card-header">
+          <i class="bi bi-exclamation-triangle-fill" style="color:var(--jira-red);"></i>
+          <h3 class="jira-card-title">Tickets Without Estimation</h3>
+          <span class="jira-card-badge jira-card-badge-danger">{{ no_est_rows | length }}</span>
+        </div>
+        <div class="jira-card-body">
+          <div class="table-responsive" style="max-height: 500px; overflow-y: auto;">
+            <table class="jira-table" id="table-noest">
+              <thead>
+                <tr>
+                  {% for col in no_est_rows[0].keys() %}
+                  <th>{{ col }}</th>
+                  {% endfor %}
+                </tr>
+              </thead>
+              <tbody>
+                {% for row in no_est_rows %}
+                <tr>
+                  {% for key, val in row.items() %}
+                  <td class="cell-truncate{% if 'Key' in key or 'Clé' in key %} key-nowrap{% endif %}" title="{{ val }}">
+                    {% if key == 'Status' or key == 'Statut' %}
+                      {% set status_lower = val|lower %}
+                      <span class="jira-status {% if 'progress' in status_lower or 'review' in status_lower %}jira-status-inprogress{% elif 'done' in status_lower or 'closed' in status_lower or 'resolved' in status_lower %}jira-status-done{% elif 'blocked' in status_lower %}jira-status-blocked{% else %}jira-status-todo{% endif %}">{{ val }}</span>
+                    {% else %}
+                      {{ val }}
+                    {% endif %}
+                  </td>
+                  {% endfor %}
+                </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+        </div>
+        <div class="jira-pagination" id="pag-noest"></div>
+      </div>
+    </div>
+    {% endif %}
+    
+    <!-- ═══════════════════════════════════════════════════════════════ -->
+    <!-- SECTION: No Tempo -->
+    <!-- ═══════════════════════════════════════════════════════════════ -->
+    {% if no_tempo_rows %}
+    <div id="section-notempo" class="jira-section hidden">
+      <div class="jira-card">
+        <div class="jira-card-header">
+          <i class="bi bi-clock-history" style="color:var(--jira-red);"></i>
+          <h3 class="jira-card-title">Tickets Without Worklog</h3>
+          <span class="jira-card-badge jira-card-badge-danger">{{ no_tempo_rows | length }}</span>
+        </div>
+        <div class="jira-card-body">
+          <div class="table-responsive" style="max-height: 500px; overflow-y: auto;">
+            <table class="jira-table" id="table-notempo">
+              <thead>
+                <tr>
+                  {% for col in no_tempo_rows[0].keys() %}
+                  <th>{{ col }}</th>
+                  {% endfor %}
+                </tr>
+              </thead>
+              <tbody>
+                {% for row in no_tempo_rows %}
+                <tr>
+                  {% for key, val in row.items() %}
+                  <td class="cell-truncate{% if 'Key' in key or 'Clé' in key %} key-nowrap{% endif %}" title="{{ val }}">
+                    {% if key == 'Status' or key == 'Statut' %}
+                      {% set status_lower = val|lower %}
+                      <span class="jira-status {% if 'progress' in status_lower or 'review' in status_lower %}jira-status-inprogress{% elif 'done' in status_lower or 'closed' in status_lower or 'resolved' in status_lower %}jira-status-done{% elif 'blocked' in status_lower %}jira-status-blocked{% else %}jira-status-todo{% endif %}">{{ val }}</span>
+                    {% else %}
+                      {{ val }}
+                    {% endif %}
+                  </td>
+                  {% endfor %}
+                </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+        </div>
+        <div class="jira-pagination" id="pag-notempo"></div>
+      </div>
+    </div>
+    {% endif %}
+    
+    <!-- ═══════════════════════════════════════════════════════════════ -->
+    <!-- SECTION: Resolution Time -->
+    <!-- ═══════════════════════════════════════════════════════════════ -->
+    {% if resolution_rows %}
+    <div id="section-resolution" class="jira-section hidden">
+      <div class="jira-card">
+        <div class="jira-card-header">
+          <i class="bi bi-hourglass-split" style="color:var(--jira-purple);"></i>
+          <h3 class="jira-card-title">Resolution Time by Ticket</h3>
+          <span class="jira-card-badge">{{ resolution_rows | length }}</span>
+        </div>
+        <div class="jira-card-body">
+          <div class="table-responsive" style="max-height: 500px; overflow-y: auto;">
+            <table class="jira-table" id="table-resolution">
+              <thead>
+                <tr>
+                  {% for col in resolution_rows[0].keys() %}
+                  <th>{{ col }}</th>
+                  {% endfor %}
+                </tr>
+              </thead>
+              <tbody>
+                {% for row in resolution_rows %}
+                <tr>
+                  {% for key, val in row.items() %}
+                  <td class="cell-truncate{% if 'Key' in key or 'Clé' in key %} key-nowrap{% endif %}" title="{{ val }}">
+                    {% if key == 'Priority' or key == 'Priorité' %}
+                      {% set prio_lower = val|lower %}
+                      <span class="jira-priority">
+                        <span class="jira-priority-icon priority-{{ prio_lower }}">
+                          {% if prio_lower == 'blocker' or prio_lower == 'highest' %}<i class="bi bi-chevron-double-up"></i>
+                          {% elif prio_lower == 'critical' or prio_lower == 'high' %}<i class="bi bi-chevron-up"></i>
+                          {% elif prio_lower == 'medium' %}<i class="bi bi-dash"></i>
+                          {% elif prio_lower == 'low' %}<i class="bi bi-chevron-down"></i>
+                          {% else %}<i class="bi bi-chevron-double-down"></i>{% endif %}
+                        </span>
+                        {{ val }}
+                      </span>
+                    {% else %}
+                      {{ val }}
+                    {% endif %}
+                  </td>
+                  {% endfor %}
+                </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+        </div>
+        <div class="jira-pagination" id="pag-resolution"></div>
+      </div>
+    </div>
+    {% endif %}
+    
+  </div><!-- /jira-content -->
+</main>
 
-    </div><!-- /col-12 -->
-  </div><!-- /row -->
-</div><!-- /container -->
-
-<script>
-function updateTableIndex(sectionName) {
-  // Show only table references for the current section
-  const allItems = document.querySelectorAll('.nx-table-index-list li[data-section]');
-  let hasVisibleItems = false;
-  
-  allItems.forEach(function(item) {
-    const itemSection = item.getAttribute('data-section');
-    if (itemSection === sectionName) {
-      item.classList.remove('hidden-item');
-      hasVisibleItems = true;
-    } else {
-      item.classList.add('hidden-item');
-    }
-  });
-  
-  // Hide/show the entire index based on whether there are visible items
-  const indexEl = document.getElementById('table-ref-index');
-  const toggleBtn = document.getElementById('table-index-toggle');
-  if (indexEl) {
-    if (hasVisibleItems) {
-      indexEl.classList.remove('hidden');
-      if (toggleBtn) toggleBtn.style.display = '';
-    } else {
-      indexEl.classList.add('hidden');
-      if (toggleBtn) toggleBtn.style.display = 'none';
-    }
-  }
-}
-
-// Toggle function for collapsible table reference menu
-function toggleTableIndex() {
-  const indexEl = document.getElementById('table-ref-index');
-  const toggleBtn = document.getElementById('table-index-toggle');
-  const mainContent = document.querySelector('.nx-main-content');
-  
-  if (indexEl && toggleBtn) {
-    const isCollapsed = indexEl.classList.toggle('collapsed');
-    toggleBtn.classList.toggle('collapsed', isCollapsed);
-    if (mainContent) {
-      mainContent.classList.toggle('menu-collapsed', isCollapsed);
-    }
-  }
-}
-
-function nxNav(sectionName, clickedEl) {
-  // 1. Remove 'active' from all nav items
-  const allNav = document.querySelectorAll('.nx-nav-item');
-  allNav.forEach(function(nav) {
-    nav.classList.remove('active');
-  });
-  // 2. Add 'active' to clicked element
-  clickedEl.classList.add('active');
-  // 3. Hide all sections
-  const allSections = document.querySelectorAll('.nx-section');
-  allSections.forEach(function(section) {
-    section.classList.add('hidden');
-  });
-  // 4. Show the target section
-  const target = document.getElementById('section-' + sectionName);
-  if (target) {
-    target.classList.remove('hidden');
-  }
-  // 5. Update the floating table index to show only current section's tables
-  updateTableIndex(sectionName);
-}
-
-// Initialize table index on page load to show overview tables
-document.addEventListener('DOMContentLoaded', function() {
-  updateTableIndex('overview');
-});
-</script>
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-YvpcrYf0tY3lHB60NNkmXc4s9bIOgUxi8T/jzmq0oWnOFvYqbsGH5vxsVLXuLVrJ" crossorigin="anonymous"></script>
 <script>
-  document.addEventListener('DOMContentLoaded', function() {
-    // ── Bootstrap tooltips ──
-    var tooltipEls = document.querySelectorAll('[data-bs-toggle="tooltip"]');
-    tooltipEls.forEach(function(el) {
-      new bootstrap.Tooltip(el);
-    });
+// Tab switching
+function switchTab(sectionName, clickedEl) {
+  // Remove active from all tabs
+  document.querySelectorAll('.jira-tab').forEach(tab => tab.classList.remove('active'));
+  // Add active to clicked tab
+  clickedEl.classList.add('active');
+  // Hide all sections
+  document.querySelectorAll('.jira-section').forEach(section => section.classList.add('hidden'));
+  // Show target section
+  const target = document.getElementById('section-' + sectionName);
+  if (target) target.classList.remove('hidden');
+}
 
-    // ── Client-side pagination ──
-    var PAGE_SIZE = 10;
-
-    function initPagination(tableId, pagId) {
-      var table = document.getElementById(tableId);
-      if (!table) return;
-      var rows = Array.from(table.querySelectorAll('tbody tr'));
-      if (rows.length <= PAGE_SIZE) return;
-
-      var totalPages = Math.ceil(rows.length / PAGE_SIZE);
-      var currentPage = 1;
-
-      function renderPage(page) {
-        currentPage = page;
-        for (var i = 0; i < rows.length; i++) {
-          rows[i].style.display = (i >= (page - 1) * PAGE_SIZE && i < page * PAGE_SIZE) ? '' : 'none';
-        }
-        var pag = document.getElementById(pagId);
-        pag.innerHTML =
-          '<button type="button" class="btn btn-sm btn-outline-secondary" id="' + pagId + '-prev" aria-label="Page précédente"><i class="bi bi-chevron-left"></i> Précédent</button>' +
-          '<span class="page-info mx-2">Page ' + page + ' / ' + totalPages + '</span>' +
-          '<button type="button" class="btn btn-sm btn-outline-secondary" id="' + pagId + '-next" aria-label="Page suivante">Suivant <i class="bi bi-chevron-right"></i></button>';
-
-        var prevBtn = document.getElementById(pagId + '-prev');
-        var nextBtn = document.getElementById(pagId + '-next');
-        prevBtn.disabled = (page === 1);
-        nextBtn.disabled = (page === totalPages);
-        prevBtn.onclick = function() { if (currentPage > 1) renderPage(currentPage - 1); };
-        nextBtn.onclick = function() { if (currentPage < totalPages) renderPage(currentPage + 1); };
-      }
-
-      renderPage(1);
-    }
-
-    initPagination('table-wip', 'pag-wip');
-    initPagination('table-noest', 'pag-noest');
-    initPagination('table-notempo', 'pag-notempo');
-    initPagination('table-resolution', 'pag-resolution');
-
-    // ── Accordion chevron rotation ──
-    var collapseHeaders = document.querySelectorAll('[data-bs-toggle="collapse"]');
-    collapseHeaders.forEach(function(header) {
-      var target = document.querySelector(header.getAttribute('data-bs-target'));
-      if (!target) return;
-      target.addEventListener('show.bs.collapse', function() { header.classList.remove('collapsed'); });
-      target.addEventListener('hide.bs.collapse', function() { header.classList.add('collapsed'); });
-    });
+// Collapse chevron rotation
+document.addEventListener('DOMContentLoaded', function() {
+  document.querySelectorAll('[data-bs-toggle="collapse"]').forEach(header => {
+    const target = document.querySelector(header.getAttribute('data-bs-target'));
+    if (!target) return;
+    target.addEventListener('show.bs.collapse', () => header.classList.remove('collapsed'));
+    target.addEventListener('hide.bs.collapse', () => header.classList.add('collapsed'));
   });
+  
+  // Pagination
+  const PAGE_SIZE = 15;
+  
+  function initPagination(tableId, pagId) {
+    const table = document.getElementById(tableId);
+    if (!table) return;
+    const rows = Array.from(table.querySelectorAll('tbody tr'));
+    if (rows.length <= PAGE_SIZE) return;
+    
+    const totalPages = Math.ceil(rows.length / PAGE_SIZE);
+    let currentPage = 1;
+    
+    function renderPage(page) {
+      currentPage = page;
+      rows.forEach((row, i) => {
+        row.style.display = (i >= (page - 1) * PAGE_SIZE && i < page * PAGE_SIZE) ? '' : 'none';
+      });
+      const pag = document.getElementById(pagId);
+      if (!pag) return;
+      pag.innerHTML = 
+        '<button type="button" class="jira-pagination-btn" id="' + pagId + '-prev"><i class="bi bi-chevron-left"></i> Previous</button>' +
+        '<span class="jira-pagination-info">Page ' + page + ' of ' + totalPages + '</span>' +
+        '<button type="button" class="jira-pagination-btn" id="' + pagId + '-next">Next <i class="bi bi-chevron-right"></i></button>';
+      
+      document.getElementById(pagId + '-prev').disabled = (page === 1);
+      document.getElementById(pagId + '-next').disabled = (page === totalPages);
+      document.getElementById(pagId + '-prev').onclick = () => { if (currentPage > 1) renderPage(currentPage - 1); };
+      document.getElementById(pagId + '-next').onclick = () => { if (currentPage < totalPages) renderPage(currentPage + 1); };
+    }
+    
+    renderPage(1);
+  }
+  
+  initPagination('table-wip', 'pag-wip');
+  initPagination('table-noest', 'pag-noest');
+  initPagination('table-notempo', 'pag-notempo');
+  initPagination('table-resolution', 'pag-resolution');
+});
 </script>
 </body>
 </html>
