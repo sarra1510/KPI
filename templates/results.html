@@ -143,6 +143,12 @@
     .section-card .card-header.collapsed .chevron { transform: rotate(-90deg); }
     .table th { background: #f8f9fa; font-size: .8rem; color: #374151; text-transform: uppercase; letter-spacing: .04em; }
     .table td { font-size: .87rem; vertical-align: middle; }
+    .table td.cell-truncate {
+      max-width: 200px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
     .badge-count { font-size: .88rem; font-weight: 700; }
 
     /* ── Priority indicators ── */
@@ -372,7 +378,7 @@
                     {% for row in project_totals_rows %}
                     <tr>
                       {% for key, val in row.items() %}
-                      <td{% if 'Key' in key or 'Clé' in key or key == 'Projet' %} class="key-nowrap"{% endif %}>{{ val }}</td>
+                      <td class="cell-truncate{% if 'Key' in key or 'Clé' in key or key == 'Projet' %} key-nowrap{% endif %}" title="{{ val }}">{{ val }}</td>
                       {% endfor %}
                     </tr>
                     {% endfor %}
@@ -407,7 +413,7 @@
                     {% for row in project_priority_rows %}
                     <tr>
                       {% for key, val in row.items() %}
-                      <td{% if 'Key' in key or 'Clé' in key or key == 'Projet' %} class="key-nowrap"{% endif %}>
+                      <td class="cell-truncate{% if 'Key' in key or 'Clé' in key or key == 'Projet' %} key-nowrap{% endif %}" title="{{ val }}">
                         {% if key == 'Priorité' %}
                           {% set prio_lower = val|lower %}
                           {% if prio_lower == 'blocker' %}
@@ -467,7 +473,7 @@
                   {% for row in wip_rows %}
                   <tr>
                     {% for key, val in row.items() %}
-                    <td{% if 'Key' in key or 'Clé' in key %} class="key-nowrap"{% endif %}>{{ val }}</td>
+                    <td class="cell-truncate{% if 'Key' in key or 'Clé' in key %} key-nowrap{% endif %}" title="{{ val }}">{{ val }}</td>
                     {% endfor %}
                   </tr>
                   {% endfor %}
@@ -502,7 +508,7 @@
                   {% for row in no_est_rows %}
                   <tr>
                     {% for key, val in row.items() %}
-                    <td{% if 'Key' in key or 'Clé' in key %} class="key-nowrap"{% endif %}>{{ val }}</td>
+                    <td class="cell-truncate{% if 'Key' in key or 'Clé' in key %} key-nowrap{% endif %}" title="{{ val }}">{{ val }}</td>
                     {% endfor %}
                   </tr>
                   {% endfor %}
@@ -537,7 +543,7 @@
                   {% for row in no_tempo_rows %}
                   <tr>
                     {% for key, val in row.items() %}
-                    <td{% if 'Key' in key or 'Clé' in key %} class="key-nowrap"{% endif %}>{{ val }}</td>
+                    <td class="cell-truncate{% if 'Key' in key or 'Clé' in key %} key-nowrap{% endif %}" title="{{ val }}">{{ val }}</td>
                     {% endfor %}
                   </tr>
                   {% endfor %}
@@ -572,7 +578,7 @@
                   {% for row in resolution_rows %}
                   <tr>
                     {% for key, val in row.items() %}
-                    <td{% if 'Key' in key or 'Clé' in key %} class="key-nowrap"{% endif %}>
+                    <td class="cell-truncate{% if 'Key' in key or 'Clé' in key %} key-nowrap{% endif %}" title="{{ val }}">
                       {% if key == 'Priorité' %}
                         {% set prio_lower = val|lower %}
                         {% if prio_lower == 'blocker' %}
