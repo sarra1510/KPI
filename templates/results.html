@@ -91,42 +91,94 @@
     .color-teal   { color: var(--nx-teal-dark); }
     .color-gray   { color: #6b7280; }
 
-    /* ── Sidebar ── */
-    .nx-sidebar {
-      position: sticky;
-      top: 1rem;
+    /* ── Horizontal Navigation ── */
+    .nx-nav-horizontal {
       background: #fff;
       border-radius: 1rem;
       box-shadow: 0 2px 12px rgba(0,0,0,.07);
-      padding: 1rem 0;
-      min-width: 0;
+      padding: .75rem 1rem;
+      margin-bottom: 1.5rem;
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: .5rem;
     }
-    .nx-sidebar-title {
+    .nx-nav-title {
       font-size: .7rem;
       font-weight: 700;
       color: #9ca3af;
       letter-spacing: .1em;
       text-transform: uppercase;
-      padding: 0 1rem .5rem;
+      margin-right: .5rem;
     }
     .nx-nav-item {
-      display: block;
-      width: 100%;
-      text-align: left;
+      display: inline-flex;
+      align-items: center;
+      gap: .35rem;
       background: none;
       border: none;
-      padding: .6rem 1rem;
-      border-radius: 0;
-      font-size: .9rem;
+      padding: .5rem .9rem;
+      border-radius: .5rem;
+      font-size: .85rem;
       color: #374151;
       cursor: pointer;
       transition: background .15s, color .15s;
       white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
+      text-decoration: none;
     }
     .nx-nav-item:hover { background: var(--nx-teal-light); color: var(--nx-teal-dark); }
-    .nx-nav-item.active { background: var(--nx-teal-light); color: var(--nx-teal-dark); font-weight: 700; border-left: 3px solid var(--nx-teal); }
+    .nx-nav-item.active { background: var(--nx-teal-light); color: var(--nx-teal-dark); font-weight: 700; border-bottom: 2px solid var(--nx-teal); }
+
+    /* ── Table Reference Index ── */
+    .nx-table-index {
+      background: #fff;
+      border-radius: 1rem;
+      box-shadow: 0 2px 12px rgba(0,0,0,.07);
+      padding: 1rem 1.25rem;
+      margin-bottom: 1.5rem;
+    }
+    .nx-table-index-title {
+      font-size: .75rem;
+      font-weight: 700;
+      color: #9ca3af;
+      letter-spacing: .1em;
+      text-transform: uppercase;
+      margin-bottom: .75rem;
+    }
+    .nx-table-index-list {
+      display: flex;
+      flex-wrap: wrap;
+      gap: .5rem;
+      list-style: none;
+      margin: 0;
+      padding: 0;
+    }
+    .nx-table-index-item {
+      display: inline-flex;
+      align-items: center;
+      gap: .35rem;
+      background: var(--nx-teal-light);
+      border: 1px solid var(--nx-teal);
+      padding: .4rem .75rem;
+      border-radius: .5rem;
+      font-size: .8rem;
+      color: var(--nx-teal-dark);
+      cursor: pointer;
+      transition: background .15s, transform .1s;
+      text-decoration: none;
+    }
+    .nx-table-index-item:hover { 
+      background: var(--nx-teal); 
+      color: #fff; 
+      transform: translateY(-1px);
+    }
+    .nx-table-index-item .badge {
+      background: var(--nx-teal-dark);
+      color: #fff;
+      font-size: .7rem;
+      padding: .15rem .4rem;
+      border-radius: .3rem;
+    }
 
     /* ── Section / accordion cards ── */
     .section-card { border: none; border-radius: 1rem; box-shadow: 0 2px 12px rgba(0,0,0,.07); background: #fff; }
@@ -228,31 +280,70 @@
     </div>
   </div>
 
-  <!-- Sidebar + main content -->
-  <div class="row g-4 align-items-start">
+  <!-- Horizontal Navigation Menu -->
+  <div class="nx-nav-horizontal">
+    <span class="nx-nav-title">Navigation</span>
+    <a href="javascript:void(0)" class="nx-nav-item active" onclick="nxNav('overview', this)"><i class="bi bi-bar-chart"></i> Vue d'ensemble</a>
+    {% if resolution_rows %}
+    <a href="javascript:void(0)" class="nx-nav-item" onclick="nxNav('resolution', this)"><i class="bi bi-hourglass-split"></i> Temps de résolution</a>
+    {% endif %}
+    {% if wip_rows %}
+    <a href="javascript:void(0)" class="nx-nav-item" onclick="nxNav('wip', this)"><i class="bi bi-arrow-repeat"></i> WIP End Sprint</a>
+    {% endif %}
+    {% if no_est_rows %}
+    <a href="javascript:void(0)" class="nx-nav-item" onclick="nxNav('noest', this)"><i class="bi bi-exclamation-triangle"></i> Sans estimation</a>
+    {% endif %}
+    {% if no_tempo_rows %}
+    <a href="javascript:void(0)" class="nx-nav-item" onclick="nxNav('notempo', this)"><i class="bi bi-stopwatch"></i> Sans tempo</a>
+    {% endif %}
+  </div>
 
-    <!-- ── Sidebar ── -->
-    <div class="col-12 col-md-3 col-lg-2">
-      <div class="nx-sidebar">
-        <div class="nx-sidebar-title">Navigation</div>
-        <a href="javascript:void(0)" class="nx-nav-item active" onclick="nxNav('overview', this)"><i class="bi bi-bar-chart"></i> Vue d'ensemble</a>
-        {% if resolution_rows %}
-        <a href="javascript:void(0)" class="nx-nav-item" onclick="nxNav('resolution', this)"><i class="bi bi-hourglass-split"></i> Temps de résolution</a>
-        {% endif %}
-        {% if wip_rows %}
-        <a href="javascript:void(0)" class="nx-nav-item" onclick="nxNav('wip', this)"><i class="bi bi-arrow-repeat"></i> WIP End Sprint</a>
-        {% endif %}
-        {% if no_est_rows %}
-        <a href="javascript:void(0)" class="nx-nav-item" onclick="nxNav('noest', this)"><i class="bi bi-exclamation-triangle"></i> Sans estimation</a>
-        {% endif %}
-        {% if no_tempo_rows %}
-        <a href="javascript:void(0)" class="nx-nav-item" onclick="nxNav('notempo', this)"><i class="bi bi-stopwatch"></i> Sans tempo</a>
-        {% endif %}
-      </div>
-    </div>
+  <!-- Table Reference Index -->
+  <div class="nx-table-index" id="table-ref-index">
+    <div class="nx-table-index-title"><i class="bi bi-list-ul"></i> Index des tableaux</div>
+    <ul class="nx-table-index-list">
+      {% if project_totals_rows %}
+      <li><a href="#tbl-anchor-projects-totals" class="nx-table-index-item">
+        <i class="bi bi-folder"></i> Temps par projet
+        <span class="badge">{{ project_totals_rows | length }}</span>
+      </a></li>
+      {% endif %}
+      {% if project_priority_rows %}
+      <li><a href="#tbl-anchor-projects-priority" class="nx-table-index-item">
+        <i class="bi bi-bar-chart"></i> Projet & priorité
+        <span class="badge">{{ project_priority_rows | length }}</span>
+      </a></li>
+      {% endif %}
+      {% if wip_rows %}
+      <li><a href="#tbl-anchor-wip" class="nx-table-index-item">
+        <i class="bi bi-arrow-repeat"></i> WIP End Sprint
+        <span class="badge">{{ wip_rows | length }}</span>
+      </a></li>
+      {% endif %}
+      {% if no_est_rows %}
+      <li><a href="#tbl-anchor-noest" class="nx-table-index-item">
+        <i class="bi bi-exclamation-triangle"></i> Sans estimation
+        <span class="badge">{{ no_est_rows | length }}</span>
+      </a></li>
+      {% endif %}
+      {% if no_tempo_rows %}
+      <li><a href="#tbl-anchor-notempo" class="nx-table-index-item">
+        <i class="bi bi-stopwatch"></i> Sans tempo
+        <span class="badge">{{ no_tempo_rows | length }}</span>
+      </a></li>
+      {% endif %}
+      {% if resolution_rows %}
+      <li><a href="#tbl-anchor-resolution" class="nx-table-index-item">
+        <i class="bi bi-hourglass-split"></i> Temps de résolution
+        <span class="badge">{{ resolution_rows | length }}</span>
+      </a></li>
+      {% endif %}
+    </ul>
+  </div>
 
-    <!-- ── Main content ── -->
-    <div class="col-12 col-md-9 col-lg-10">
+  <!-- Main content (full width) -->
+  <div class="row g-4">
+    <div class="col-12">
 
       <!-- ══ Section: Vue d'ensemble ══ -->
       <div id="section-overview" class="nx-section">
@@ -358,7 +449,7 @@
 
         <!-- Temps passé par projet (totaux) -->
         {% if project_totals_rows %}
-        <div class="section-card card mb-4">
+        <div id="tbl-anchor-projects-totals" class="section-card card mb-4">
           <div class="card-header d-flex align-items-center gap-2" data-bs-toggle="collapse" data-bs-target="#tbl-projects-totals" aria-expanded="true">
             <span class="chevron">▼</span>
             <i class="bi bi-folder"></i> Temps passé par projet (totaux)
@@ -393,7 +484,7 @@
 
         <!-- Temps passé par projet et priorité -->
         {% if project_priority_rows %}
-        <div class="section-card card mb-4">
+        <div id="tbl-anchor-projects-priority" class="section-card card mb-4">
           <div class="card-header d-flex align-items-center gap-2" data-bs-toggle="collapse" data-bs-target="#tbl-projects-priority" aria-expanded="true">
             <span class="chevron">▼</span>
             <i class="bi bi-bar-chart"></i> Temps passé par projet et priorité
@@ -455,7 +546,7 @@
       <!-- ══ Section: WIP ══ -->
       {% if wip_rows %}
       <div id="section-wip" class="nx-section" style="display:none">
-        <div class="section-card card mb-3">
+        <div id="tbl-anchor-wip" class="section-card card mb-3">
           <div class="card-header d-flex align-items-center gap-2">
             <i class="bi bi-arrow-repeat"></i> WIP End Sprint
             <span class="badge ms-1 badge-count bg-secondary">{{ wip_rows | length }}</span>
@@ -490,7 +581,7 @@
       <!-- ══ Section: Sans estimation ══ -->
       {% if no_est_rows %}
       <div id="section-noest" class="nx-section" style="display:none">
-        <div class="section-card card mb-3">
+        <div id="tbl-anchor-noest" class="section-card card mb-3">
           <div class="card-header d-flex align-items-center gap-2">
             <i class="bi bi-exclamation-triangle"></i> Tickets sans estimation
             <span class="badge ms-1 badge-count bg-danger">{{ no_est_rows | length }}</span>
@@ -525,7 +616,7 @@
       <!-- ══ Section: Sans tempo ══ -->
       {% if no_tempo_rows %}
       <div id="section-notempo" class="nx-section" style="display:none">
-        <div class="section-card card mb-3">
+        <div id="tbl-anchor-notempo" class="section-card card mb-3">
           <div class="card-header d-flex align-items-center gap-2">
             <i class="bi bi-stopwatch"></i> Tickets sans tempo (sans worklog)
             <span class="badge ms-1 badge-count bg-danger">{{ no_tempo_rows | length }}</span>
@@ -560,7 +651,7 @@
       <!-- ══ Section: Temps de résolution ══ -->
       {% if resolution_rows %}
       <div id="section-resolution" class="nx-section" style="display:none">
-        <div class="section-card card mb-3">
+        <div id="tbl-anchor-resolution" class="section-card card mb-3">
           <div class="card-header d-flex align-items-center gap-2">
             <i class="bi bi-hourglass-split"></i> Temps de résolution par ticket
             <span class="badge ms-1 badge-count" style="background:var(--nx-teal);">{{ resolution_rows | length }}</span>
@@ -616,7 +707,7 @@
       </div>
       {% endif %}
 
-    </div><!-- /col main content -->
+    </div><!-- /col-12 -->
   </div><!-- /row -->
 </div><!-- /container -->
 
