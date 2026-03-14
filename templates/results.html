@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>SPRINT KPI DASHBOARD — NeoXam</title>
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous" />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" />
   <style>
     :root {
       --nx-teal: #00BFA6;
@@ -193,10 +194,10 @@
     </div>
     <div class="d-flex gap-2 flex-wrap justify-content-end">
       <a href="/download/{{ report_filename }}" class="btn btn-sm btn-nx">
-        ⬇️ Export Excel
+        <i class="bi bi-download"></i> Export Excel
       </a>
       <a href="/" class="btn btn-sm btn-nx-outline" style="color:#fff; border-color:rgba(255,255,255,.6);">
-        🔄 Nouveau fichier
+        <i class="bi bi-arrow-repeat"></i> Nouveau fichier
       </a>
     </div>
   </div>
@@ -234,18 +235,18 @@
     <div class="col-12 col-md-3 col-lg-2">
       <div class="nx-sidebar">
         <div class="nx-sidebar-title">Navigation</div>
-        <a href="javascript:void(0)" class="nx-nav-item active" onclick="nxNav('overview', this)">📊 Vue d'ensemble</a>
+        <a href="javascript:void(0)" class="nx-nav-item active" onclick="nxNav('overview', this)"><i class="bi bi-bar-chart"></i> Vue d'ensemble</a>
         {% if resolution_rows %}
-        <a href="javascript:void(0)" class="nx-nav-item" onclick="nxNav('resolution', this)">⏳ Temps de résolution</a>
+        <a href="javascript:void(0)" class="nx-nav-item" onclick="nxNav('resolution', this)"><i class="bi bi-hourglass-split"></i> Temps de résolution</a>
         {% endif %}
         {% if wip_rows %}
-        <a href="javascript:void(0)" class="nx-nav-item" onclick="nxNav('wip', this)">🔄 WIP End Sprint</a>
+        <a href="javascript:void(0)" class="nx-nav-item" onclick="nxNav('wip', this)"><i class="bi bi-arrow-repeat"></i> WIP End Sprint</a>
         {% endif %}
         {% if no_est_rows %}
-        <a href="javascript:void(0)" class="nx-nav-item" onclick="nxNav('noest', this)">⚠️ Sans estimation</a>
+        <a href="javascript:void(0)" class="nx-nav-item" onclick="nxNav('noest', this)"><i class="bi bi-exclamation-triangle"></i> Sans estimation</a>
         {% endif %}
         {% if no_tempo_rows %}
-        <a href="javascript:void(0)" class="nx-nav-item" onclick="nxNav('notempo', this)">⏱️ Sans tempo</a>
+        <a href="javascript:void(0)" class="nx-nav-item" onclick="nxNav('notempo', this)"><i class="bi bi-stopwatch"></i> Sans tempo</a>
         {% endif %}
       </div>
     </div>
@@ -265,7 +266,7 @@
                  data-bs-toggle="tooltip"
                  data-bs-placement="top"
                  title="Nombre de tickets résolus (status : closed, done, released, customer pending)">
-              <div class="kpi-icon">✅</div>
+              <div class="kpi-icon"><i class="bi bi-check-circle"></i></div>
               <div class="kpi-value color-green">{{ kpis.throughput }}</div>
               <div class="kpi-label">Throughput (résolus)</div>
             </div>
@@ -277,7 +278,7 @@
                  data-bs-toggle="tooltip"
                  data-bs-placement="top"
                  title="Nombre de tickets encore en cours à la fin du sprint (status : In Progress, In Review, etc.)">
-              <div class="kpi-icon">🔄</div>
+              <div class="kpi-icon"><i class="bi bi-arrow-repeat"></i></div>
               <div class="kpi-value
                 {% if kpis.wip_count == 0 %}color-green
                 {% elif kpis.wip_count <= 5 %}color-yellow
@@ -294,7 +295,7 @@
                  data-bs-toggle="tooltip"
                  data-bs-placement="top"
                  title="Nombre de tickets sans estimation d'effort (Original Estimate vide ou 0)">
-              <div class="kpi-icon">⚠️</div>
+              <div class="kpi-icon"><i class="bi bi-exclamation-triangle"></i></div>
               <div class="kpi-value
                 {% if kpis.no_est_count == 0 %}color-green
                 {% elif kpis.no_est_count <= 3 %}color-yellow
@@ -311,7 +312,7 @@
                  data-bs-toggle="tooltip"
                  data-bs-placement="top"
                  title="Nombre de tickets sans worklog Tempo associé">
-              <div class="kpi-icon">⏱️</div>
+              <div class="kpi-icon"><i class="bi bi-stopwatch"></i></div>
               <div class="kpi-value
                 {% if kpis.no_tempo_count == 0 %}color-green
                 {% elif kpis.no_tempo_count <= 3 %}color-yellow
@@ -328,7 +329,7 @@
                  data-bs-toggle="tooltip"
                  data-bs-placement="top"
                  title="Somme des heures Tempo / 8">
-              <div class="kpi-icon">⏰</div>
+              <div class="kpi-icon"><i class="bi bi-clock"></i></div>
               <div class="kpi-value color-teal">{{ kpis.total_logged_days }}</div>
               <div class="kpi-label">Jours logués (j)</div>
             </div>
@@ -341,7 +342,7 @@
                  data-bs-toggle="tooltip"
                  data-bs-placement="top"
                  title="Moyenne de (Date résolution - Date 1er worklog Tempo) en jours">
-              <div class="kpi-icon">⏳</div>
+              <div class="kpi-icon"><i class="bi bi-hourglass-split"></i></div>
               <div class="kpi-value
                 {% if kpis.avg_resolution_days <= 5 %}color-green
                 {% elif kpis.avg_resolution_days <= 15 %}color-yellow
@@ -360,7 +361,7 @@
         <div class="section-card card mb-4">
           <div class="card-header d-flex align-items-center gap-2" data-bs-toggle="collapse" data-bs-target="#tbl-projects-totals" aria-expanded="true">
             <span class="chevron">▼</span>
-            📂 Temps passé par projet (totaux)
+            <i class="bi bi-folder"></i> Temps passé par projet (totaux)
             <span class="badge ms-1 badge-count" style="background:var(--nx-teal);">{{ project_totals_rows | length }}</span>
           </div>
           <div id="tbl-projects-totals" class="collapse show">
@@ -395,7 +396,7 @@
         <div class="section-card card mb-4">
           <div class="card-header d-flex align-items-center gap-2" data-bs-toggle="collapse" data-bs-target="#tbl-projects-priority" aria-expanded="true">
             <span class="chevron">▼</span>
-            📊 Temps passé par projet et priorité
+            <i class="bi bi-bar-chart"></i> Temps passé par projet et priorité
             <span class="badge ms-1 badge-count" style="background:var(--nx-teal);">{{ project_priority_rows | length }}</span>
           </div>
           <div id="tbl-projects-priority" class="collapse show">
@@ -456,7 +457,7 @@
       <div id="section-wip" class="nx-section" style="display:none">
         <div class="section-card card mb-3">
           <div class="card-header d-flex align-items-center gap-2">
-            🔄 WIP End Sprint
+            <i class="bi bi-arrow-repeat"></i> WIP End Sprint
             <span class="badge ms-1 badge-count bg-secondary">{{ wip_rows | length }}</span>
           </div>
           <div class="card-body p-0">
@@ -491,7 +492,7 @@
       <div id="section-noest" class="nx-section" style="display:none">
         <div class="section-card card mb-3">
           <div class="card-header d-flex align-items-center gap-2">
-            ⚠️ Tickets sans estimation
+            <i class="bi bi-exclamation-triangle"></i> Tickets sans estimation
             <span class="badge ms-1 badge-count bg-danger">{{ no_est_rows | length }}</span>
           </div>
           <div class="card-body p-0">
@@ -526,7 +527,7 @@
       <div id="section-notempo" class="nx-section" style="display:none">
         <div class="section-card card mb-3">
           <div class="card-header d-flex align-items-center gap-2">
-            ⏱️ Tickets sans tempo (sans worklog)
+            <i class="bi bi-stopwatch"></i> Tickets sans tempo (sans worklog)
             <span class="badge ms-1 badge-count bg-danger">{{ no_tempo_rows | length }}</span>
           </div>
           <div class="card-body p-0">
@@ -561,7 +562,7 @@
       <div id="section-resolution" class="nx-section" style="display:none">
         <div class="section-card card mb-3">
           <div class="card-header d-flex align-items-center gap-2">
-            ⏳ Temps de résolution par ticket
+            <i class="bi bi-hourglass-split"></i> Temps de résolution par ticket
             <span class="badge ms-1 badge-count" style="background:var(--nx-teal);">{{ resolution_rows | length }}</span>
           </div>
           <div class="card-body p-0">
@@ -668,9 +669,9 @@ function nxNav(sectionName, clickedEl) {
         }
         var pag = document.getElementById(pagId);
         pag.innerHTML =
-          '<button type="button" class="btn btn-sm btn-outline-secondary" id="' + pagId + '-prev" aria-label="Page précédente">◀ Précédent</button>' +
+          '<button type="button" class="btn btn-sm btn-outline-secondary" id="' + pagId + '-prev" aria-label="Page précédente"><i class="bi bi-chevron-left"></i> Précédent</button>' +
           '<span class="page-info mx-2">Page ' + page + ' / ' + totalPages + '</span>' +
-          '<button type="button" class="btn btn-sm btn-outline-secondary" id="' + pagId + '-next" aria-label="Page suivante">Suivant ▶</button>';
+          '<button type="button" class="btn btn-sm btn-outline-secondary" id="' + pagId + '-next" aria-label="Page suivante">Suivant <i class="bi bi-chevron-right"></i></button>';
 
         var prevBtn = document.getElementById(pagId + '-prev');
         var nextBtn = document.getElementById(pagId + '-next');
