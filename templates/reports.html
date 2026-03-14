@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Sprint KPI Calculator — Jira Style</title>
+  <title>Recent Reports — Sprint KPI</title>
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous" />
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" />
   <style>
@@ -112,7 +112,7 @@
     /* Content Container */
     .jira-content {
       padding: 2rem;
-      max-width: 720px;
+      max-width: 900px;
       margin: 0 auto;
     }
     
@@ -138,72 +138,6 @@
     }
     .jira-card-body { padding: 1.5rem 1.25rem; }
     
-    /* Drop zone */
-    .jira-drop-zone {
-      border: 2px dashed var(--jira-blue);
-      border-radius: 8px;
-      padding: 2.5rem 1.5rem;
-      text-align: center;
-      background: var(--jira-blue-subtle);
-      cursor: pointer;
-      transition: all .2s ease;
-    }
-    .jira-drop-zone:hover { background: var(--jira-blue-light); border-color: var(--jira-blue-dark); }
-    .jira-drop-zone.drag-over { background: var(--jira-blue-light); border-color: var(--jira-blue-dark); transform: scale(1.01); }
-    .jira-drop-zone .icon { font-size: 2.5rem; color: var(--jira-blue); margin-bottom: .75rem; }
-    .jira-drop-zone input[type="file"] { display: none; }
-    .jira-drop-zone-text { font-size: .95rem; font-weight: 500; color: var(--jira-neutral-dark); margin-bottom: .25rem; }
-    .jira-drop-zone-hint { font-size: .8rem; color: var(--jira-neutral-light); }
-    #file-name { margin-top: .75rem; font-size: .875rem; color: var(--jira-neutral-medium); }
-    
-    /* Form elements */
-    .jira-form-label {
-      font-size: .75rem;
-      font-weight: 600;
-      color: var(--jira-neutral-medium);
-      text-transform: uppercase;
-      letter-spacing: .04em;
-      margin-bottom: .5rem;
-      display: block;
-    }
-    .jira-input {
-      border: 2px solid var(--jira-neutral-subtle);
-      border-radius: 4px;
-      padding: .625rem .75rem;
-      font-size: .95rem;
-      color: var(--jira-neutral-dark);
-      transition: border-color .15s ease;
-      width: 100%;
-    }
-    .jira-input:focus { outline: none; border-color: var(--jira-blue); box-shadow: 0 0 0 2px var(--jira-blue-light); }
-    .jira-input-group {
-      display: flex;
-      align-items: stretch;
-    }
-    .jira-input-addon {
-      background: var(--jira-background);
-      border: 2px solid var(--jira-neutral-subtle);
-      border-right: none;
-      border-radius: 4px 0 0 4px;
-      padding: 0 .75rem;
-      display: flex;
-      align-items: center;
-      color: var(--jira-neutral-light);
-    }
-    .jira-input-addon-right {
-      border-right: 2px solid var(--jira-neutral-subtle);
-      border-left: none;
-      border-radius: 0 4px 4px 0;
-    }
-    .jira-input-group .jira-input {
-      border-radius: 0;
-    }
-    .jira-form-hint {
-      font-size: .75rem;
-      color: var(--jira-neutral-light);
-      margin-top: .375rem;
-    }
-    
     /* Buttons */
     .jira-btn {
       display: inline-flex;
@@ -224,11 +158,15 @@
       color: #fff;
     }
     .jira-btn-primary:hover { background: var(--jira-blue-dark); color: #fff; }
-    .jira-btn-lg {
-      padding: .875rem 1.5rem;
-      font-size: 1rem;
+    .jira-btn-danger {
+      background: var(--jira-red);
+      color: #fff;
     }
-    .jira-btn-block { width: 100%; }
+    .jira-btn-danger:hover { background: #BF2600; color: #fff; }
+    .jira-btn-sm {
+      padding: .375rem .625rem;
+      font-size: .75rem;
+    }
     
     /* History table */
     .jira-history-badge {
@@ -300,17 +238,34 @@
       font-size: .75rem;
     }
     
-    /* Sprint badge */
-    .jira-sprint-badge {
-      background: var(--jira-purple);
-      color: #fff;
-      font-size: .7rem;
+    /* Empty state */
+    .jira-empty-state {
+      text-align: center;
+      padding: 3rem 1.5rem;
+      color: var(--jira-neutral-light);
+    }
+    .jira-empty-state-icon {
+      font-size: 3rem;
+      margin-bottom: 1rem;
+      color: var(--jira-neutral-subtle);
+    }
+    .jira-empty-state-title {
+      font-size: 1.125rem;
       font-weight: 600;
-      padding: .25rem .625rem;
-      border-radius: 4px;
-      display: inline-flex;
+      color: var(--jira-neutral-dark);
+      margin-bottom: .5rem;
+    }
+    .jira-empty-state-text {
+      font-size: .875rem;
+      color: var(--jira-neutral-light);
+      margin-bottom: 1.5rem;
+    }
+    
+    /* Actions column */
+    .actions-cell {
+      display: flex;
+      gap: .5rem;
       align-items: center;
-      gap: .35rem;
     }
   </style>
 </head>
@@ -325,10 +280,10 @@
       <path d="M11.998 22L6.998 17H10.5V12.5H6.998L11.998 7.5L16.998 12.5H13.5V17H16.998L11.998 22Z" fill="#2684FF"/>
     </svg>
   </div>
-  <a href="/" class="jira-nav-item active" title="Home">
+  <a href="/" class="jira-nav-item" title="Home">
     <i class="bi bi-house-door"></i>
   </a>
-  <a href="/reports" class="jira-nav-item" title="Reports">
+  <a href="/reports" class="jira-nav-item active" title="Reports">
     <i class="bi bi-bar-chart-line"></i>
   </a>
 </nav>
@@ -341,15 +296,16 @@
         <a href="/">Projects</a>
         <i class="bi bi-chevron-right" style="font-size:.5rem;"></i>
         <span>Sprint KPI</span>
+        <i class="bi bi-chevron-right" style="font-size:.5rem;"></i>
+        <span>Reports</span>
       </div>
-      <h1 class="jira-header-title">Sprint KPI Calculator</h1>
-      <p class="jira-header-subtitle">Analyze sprint metrics from your Jira exports</p>
+      <h1 class="jira-header-title">Recent Reports</h1>
+      <p class="jira-header-subtitle">View and manage your generated KPI reports</p>
     </div>
     <div class="ms-auto">
-      <span class="jira-sprint-badge">
-        <i class="bi bi-lightning-charge-fill"></i>
-        Sprint Analysis
-      </span>
+      <a href="/" class="jira-btn jira-btn-primary">
+        <i class="bi bi-plus-lg"></i> New Report
+      </a>
     </div>
   </header>
   
@@ -358,56 +314,65 @@
     {% with messages = get_flashed_messages(with_categories=true) %}
       {% for category, message in messages %}
         <div class="jira-alert jira-alert-{{ category }}">
-          <i class="bi bi-exclamation-circle-fill jira-alert-icon"></i>
+          <i class="bi bi-{% if category == 'danger' %}exclamation-circle-fill{% else %}info-circle-fill{% endif %} jira-alert-icon"></i>
           <div class="jira-alert-content">{{ message }}</div>
         </div>
       {% endfor %}
     {% endwith %}
 
-    <!-- Upload Card -->
+    <!-- Reports Card -->
     <div class="jira-card mb-4">
-      <div class="jira-card-header">
-        <h2 class="jira-card-title"><i class="bi bi-cloud-upload me-2"></i>Import Sprint Data</h2>
+      <div class="jira-card-header d-flex align-items-center">
+        <h2 class="jira-card-title"><i class="bi bi-clock-history me-2"></i>Report History</h2>
+        {% if history %}
+        <span class="jira-history-badge">{{ history | length }}</span>
+        {% endif %}
       </div>
-      <div class="jira-card-body">
-        <form method="post" action="/calculate" enctype="multipart/form-data" id="upload-form">
-          
-          <div class="jira-drop-zone mb-3" id="drop-zone" onclick="document.getElementById('file-input').click()">
-            <div class="icon"><i class="bi bi-file-earmark-spreadsheet"></i></div>
-            <p class="jira-drop-zone-text">Drop your Jira Excel export here</p>
-            <p class="jira-drop-zone-hint">or click to browse</p>
-            <p class="jira-drop-zone-hint">.xlsx / .xls — Sheets: Start, End Sprint, Worklogs</p>
-            <input type="file" id="file-input" name="file" accept=".xlsx,.xls" required />
-          </div>
-          <div id="file-name" class="text-center mb-4"></div>
-
-          <div class="mb-4">
-            <label for="capacity" class="jira-form-label">
-              Team Capacity (days) <span style="color:var(--jira-red);">*</span>
-            </label>
-            <div class="jira-input-group">
-              <span class="jira-input-addon"><i class="bi bi-people"></i></span>
-              <input
-                type="number"
-                id="capacity"
-                name="capacity"
-                class="jira-input"
-                placeholder="e.g. 30"
-                min="0.1"
-                step="any"
-                required
-              />
-              <span class="jira-input-addon jira-input-addon-right">days</span>
-            </div>
-            <p class="jira-form-hint">Total available team days during the sprint.</p>
-          </div>
-
-          <button type="submit" class="jira-btn jira-btn-primary jira-btn-lg jira-btn-block">
-            <i class="bi bi-graph-up"></i> Calculate KPIs
-          </button>
-
-        </form>
+      
+      {% if history %}
+      <table class="jira-table">
+        <thead>
+          <tr>
+            <th>File</th>
+            <th>Date</th>
+            <th>Capacity</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for entry in history %}
+          <tr>
+            <td style="word-break:break-all;">{{ entry.filename }}</td>
+            <td style="white-space:nowrap;">{{ entry.uploaded_at }}</td>
+            <td>{{ entry.capacity }} days</td>
+            <td>
+              <div class="actions-cell">
+                <a href="/download/{{ entry.report_filename }}" class="jira-link" title="Download report">
+                  <i class="bi bi-download"></i> Download
+                </a>
+                <form action="/delete-report/{{ entry.report_filename }}" method="POST" style="display:inline;" onsubmit="return confirm('Are you sure you want to delete this report?');">
+                  <button type="submit" class="jira-btn jira-btn-danger jira-btn-sm" title="Delete report">
+                    <i class="bi bi-trash"></i>
+                  </button>
+                </form>
+              </div>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+      {% else %}
+      <div class="jira-empty-state">
+        <div class="jira-empty-state-icon">
+          <i class="bi bi-file-earmark-bar-graph"></i>
+        </div>
+        <h3 class="jira-empty-state-title">No reports yet</h3>
+        <p class="jira-empty-state-text">Upload your first sprint data file to generate a KPI report.</p>
+        <a href="/" class="jira-btn jira-btn-primary">
+          <i class="bi bi-cloud-upload"></i> Upload Sprint Data
+        </a>
       </div>
+      {% endif %}
     </div>
 
     <div class="jira-footer">
@@ -417,41 +382,5 @@
 </main>
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-YvpcrYf0tY3lHB60NNkmXc4s9bIOgUxi8T/jzmq0oWnOFvYqbsGH5vxsVLXuLVrJ" crossorigin="anonymous"></script>
-<script>
-  const dropZone = document.getElementById('drop-zone');
-  const fileInput = document.getElementById('file-input');
-  const fileNameEl = document.getElementById('file-name');
-
-  function escapeHtml(text) {
-    const div = document.createElement('div');
-    div.textContent = text;
-    return div.innerHTML;
-  }
-
-  fileInput.addEventListener('change', () => {
-    if (fileInput.files.length > 0) {
-      fileNameEl.innerHTML = '<i class="bi bi-check-circle-fill" style="color:#00875A;"></i> Selected: <strong>' + escapeHtml(fileInput.files[0].name) + '</strong>';
-    }
-  });
-
-  dropZone.addEventListener('dragover', (e) => {
-    e.preventDefault();
-    dropZone.classList.add('drag-over');
-  });
-
-  dropZone.addEventListener('dragleave', () => {
-    dropZone.classList.remove('drag-over');
-  });
-
-  dropZone.addEventListener('drop', (e) => {
-    e.preventDefault();
-    dropZone.classList.remove('drag-over');
-    const files = e.dataTransfer.files;
-    if (files.length > 0) {
-      fileInput.files = files;
-      fileNameEl.innerHTML = '<i class="bi bi-check-circle-fill" style="color:#00875A;"></i> Selected: <strong>' + escapeHtml(files[0].name) + '</strong>';
-    }
-  });
-</script>
 </body>
 </html>
