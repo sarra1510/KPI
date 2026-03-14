@@ -364,6 +364,7 @@ def delete_report(report_filename):
     """Delete a report from history and remove the file."""
     import re
     # Security: validate filename matches expected pattern
+    # uuid.uuid4().hex generates 32 hex characters without hyphens
     if not re.fullmatch(r"[0-9a-f]{32}_KPI_Report\.xlsx", report_filename):
         flash("Fichier non autorisé.", "danger")
         return redirect(url_for("reports"))
@@ -377,7 +378,7 @@ def delete_report(report_filename):
         flash("Rapport introuvable.", "danger")
         return redirect(url_for("reports"))
 
-    # Save updated history
+    # Save updated history first - don't delete files if this fails
     try:
         with open(HISTORY_FILE, "w", encoding="utf-8") as f:
             json.dump(new_history, f, ensure_ascii=False, indent=2)
@@ -391,6 +392,8 @@ def delete_report(report_filename):
         try:
             os.remove(filepath)
         except OSError:
+            # File deletion failed but history is already updated
+            # This is acceptable as the main goal (removing from history) succeeded
             pass
 
     # Also delete the original uploaded file if it exists
@@ -401,6 +404,7 @@ def delete_report(report_filename):
             try:
                 os.remove(original_file)
             except OSError:
+                # Original file deletion failed but this is not critical
                 pass
 
     flash("Rapport supprimé avec succès.", "info")
