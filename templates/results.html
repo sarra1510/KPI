@@ -132,7 +132,8 @@
     /* ── Floating Table Reference Index (Left Side) ── */
     .nx-table-index {
       position: fixed;
-      top: 120px;
+      top: 50%;
+      transform: translateY(-50%);
       left: 20px;
       width: 220px;
       max-height: calc(100vh - 150px);
@@ -142,11 +143,14 @@
       box-shadow: 0 4px 24px rgba(0,0,0,.12);
       padding: 1rem 1rem;
       z-index: 1000;
-      transition: opacity .2s, transform .2s;
+      transition: opacity .2s, transform .2s, left .3s ease;
     }
     .nx-table-index:empty,
     .nx-table-index.hidden {
       display: none;
+    }
+    .nx-table-index.collapsed {
+      left: -220px;
     }
     .nx-table-index-list li.hidden-item {
       display: none;
@@ -161,6 +165,40 @@
       display: flex;
       align-items: center;
       gap: .35rem;
+    }
+    /* Toggle button for collapsible menu */
+    .nx-table-index-toggle {
+      position: fixed;
+      top: 50%;
+      transform: translateY(-50%);
+      left: 248px;
+      width: 28px;
+      height: 50px;
+      background: var(--nx-teal);
+      border: none;
+      border-radius: 0 .5rem .5rem 0;
+      box-shadow: 2px 2px 8px rgba(0,0,0,.15);
+      cursor: pointer;
+      z-index: 1001;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #fff;
+      font-size: 1rem;
+      transition: left .3s ease, background .2s;
+    }
+    .nx-table-index-toggle:hover {
+      background: var(--nx-teal-dark);
+    }
+    .nx-table-index-toggle.collapsed {
+      left: 8px;
+      border-radius: .5rem;
+    }
+    .nx-table-index-toggle i {
+      transition: transform .3s ease;
+    }
+    .nx-table-index-toggle.collapsed i {
+      transform: rotate(180deg);
     }
     .nx-table-index-list {
       display: flex;
@@ -211,6 +249,10 @@
     @media (min-width: 992px) {
       .nx-main-content {
         margin-left: 250px;
+        transition: margin-left .3s ease;
+      }
+      .nx-main-content.menu-collapsed {
+        margin-left: 0;
       }
     }
     @media (max-width: 991px) {
@@ -219,10 +261,18 @@
         width: 100%;
         max-height: none;
         margin-bottom: 1.5rem;
+        transform: none;
+      }
+      .nx-table-index.collapsed {
+        left: 0;
+        display: none;
       }
       .nx-table-index-list {
         flex-direction: row;
         flex-wrap: wrap;
+      }
+      .nx-table-index-toggle {
+        display: none;
       }
     }
 
@@ -389,6 +439,11 @@
       {% endif %}
     </ul>
   </div>
+
+  <!-- Toggle button for collapsible table reference menu -->
+  <button class="nx-table-index-toggle" id="table-index-toggle" onclick="toggleTableIndex()" title="Masquer/Afficher le menu des tableaux" aria-label="Masquer/Afficher le menu des tableaux">
+    <i class="bi bi-chevron-left" aria-hidden="true"></i>
+  </button>
 
   <!-- Main content (full width) -->
   <div class="row g-4 nx-main-content">
@@ -778,11 +833,29 @@ function updateTableIndex(sectionName) {
   
   // Hide/show the entire index based on whether there are visible items
   const indexEl = document.getElementById('table-ref-index');
+  const toggleBtn = document.getElementById('table-index-toggle');
   if (indexEl) {
     if (hasVisibleItems) {
       indexEl.classList.remove('hidden');
+      if (toggleBtn) toggleBtn.style.display = '';
     } else {
       indexEl.classList.add('hidden');
+      if (toggleBtn) toggleBtn.style.display = 'none';
+    }
+  }
+}
+
+// Toggle function for collapsible table reference menu
+function toggleTableIndex() {
+  const indexEl = document.getElementById('table-ref-index');
+  const toggleBtn = document.getElementById('table-index-toggle');
+  const mainContent = document.querySelector('.nx-main-content');
+  
+  if (indexEl && toggleBtn) {
+    const isCollapsed = indexEl.classList.toggle('collapsed');
+    toggleBtn.classList.toggle('collapsed', isCollapsed);
+    if (mainContent) {
+      mainContent.classList.toggle('menu-collapsed', isCollapsed);
     }
   }
 }
