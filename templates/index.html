@@ -34,12 +34,12 @@
       position: fixed;
       top: 0;
       left: 0;
-      width: 64px;
+      width: 200px;
       height: 100vh;
       background: linear-gradient(180deg, var(--jira-blue-dark) 0%, var(--jira-blue) 100%);
       display: flex;
       flex-direction: column;
-      align-items: center;
+      align-items: stretch;
       padding-top: 1rem;
       z-index: 1000;
     }
@@ -51,30 +51,46 @@
       display: flex;
       align-items: center;
       justify-content: center;
-      margin-bottom: 2rem;
+      margin: 0 auto 2rem auto;
       box-shadow: 0 2px 8px rgba(0,0,0,.15);
     }
     .jira-logo svg { width: 24px; height: 24px; }
+    .jira-nav-section {
+      padding: 0 1rem;
+      margin-bottom: 1rem;
+    }
+    .jira-nav-section-title {
+      font-size: .65rem;
+      font-weight: 600;
+      color: rgba(255,255,255,.5);
+      text-transform: uppercase;
+      letter-spacing: .08em;
+      margin-bottom: .5rem;
+      padding-left: .5rem;
+    }
     .jira-nav-item {
-      width: 44px;
-      height: 44px;
-      border-radius: 8px;
+      width: 100%;
+      height: 40px;
+      border-radius: 6px;
       display: flex;
       align-items: center;
-      justify-content: center;
-      color: rgba(255,255,255,.7);
-      margin-bottom: .5rem;
+      gap: .75rem;
+      padding: 0 .75rem;
+      color: rgba(255,255,255,.8);
+      margin-bottom: .25rem;
       cursor: pointer;
       transition: all .15s ease;
       text-decoration: none;
+      font-size: .875rem;
+      font-weight: 500;
     }
     .jira-nav-item:hover { background: rgba(255,255,255,.15); color: #fff; }
     .jira-nav-item.active { background: rgba(255,255,255,.2); color: #fff; }
-    .jira-nav-item i { font-size: 1.25rem; }
+    .jira-nav-item i { font-size: 1.1rem; width: 20px; text-align: center; }
     
     /* Main content area */
     .jira-main {
-      margin-left: 64px;
+      margin-left: 200px;
       min-height: 100vh;
       padding: 0;
     }
@@ -325,12 +341,24 @@
       <path d="M11.998 22L6.998 17H10.5V12.5H6.998L11.998 7.5L16.998 12.5H13.5V17H16.998L11.998 22Z" fill="#2684FF"/>
     </svg>
   </div>
-  <a href="/" class="jira-nav-item active" title="Home">
-    <i class="bi bi-house-door"></i>
-  </a>
-  <a href="/reports" class="jira-nav-item" title="Reports">
-    <i class="bi bi-bar-chart-line"></i>
-  </a>
+  <div class="jira-nav-section">
+    <div class="jira-nav-section-title">Home</div>
+    <a href="/" class="jira-nav-item active" title="Upload Sprint Data">
+      <i class="bi bi-cloud-upload"></i>
+      <span>Upload Sprint Data</span>
+    </a>
+    <a href="/current" class="jira-nav-item" title="Current Calculation">
+      <i class="bi bi-speedometer2"></i>
+      <span>Current Calculation</span>
+    </a>
+  </div>
+  <div class="jira-nav-section">
+    <div class="jira-nav-section-title">History</div>
+    <a href="/reports" class="jira-nav-item" title="Reports">
+      <i class="bi bi-clock-history"></i>
+      <span>Reports</span>
+    </a>
+  </div>
 </nav>
 
 <main class="jira-main">
