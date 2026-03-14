@@ -201,8 +201,7 @@ def df_to_records(df):
 
 @app.route("/")
 def index():
-    history = load_history()
-    return render_template("index.html", history=history)
+    return render_template("index.html")
 
 
 @app.route("/calculate", methods=["POST"])
@@ -351,6 +350,65 @@ def download(filename):
     if not os.path.isfile(filepath):
         return "Fichier introuvable.", 404
     return send_from_directory(UPLOAD_FOLDER, filename, as_attachment=True)
+
+
+@app.route("/reports")
+def reports():
+    """Display report history page."""
+    history = load_history()
+    return render_template("reports.html", history=history)
+
+
+@app.route("/delete-report/<report_filename>", methods=["POST"])
+def delete_report(report_filename):
+    """Delete a report from history and remove the file."""
+    import re
+    # Security: validate filename matches expected pattern
+    # uuid.uuid4().hex generates 32 hex characters without hyphens
+    if not re.fullmatch(r"[0-9a-f]{32}_KPI_Report\.xlsx", report_filename):
+        flash("Fichier non autorisé.", "danger")
+        return redirect(url_for("reports"))
+
+    # Load history and find entry to delete
+    history = load_history()
+    new_history = [entry for entry in history if entry.get("report_filename") != report_filename]
+
+    # If no change, the report was not found
+    if len(new_history) == len(history):
+        flash("Rapport introuvable.", "danger")
+        return redirect(url_for("reports"))
+
+    # Save updated history first - don't delete files if this fails
+    try:
+        with open(HISTORY_FILE, "w", encoding="utf-8") as f:
+            json.dump(new_history, f, ensure_ascii=False, indent=2)
+    except OSError:
+        flash("Erreur lors de la suppression.", "danger")
+        return redirect(url_for("reports"))
+
+    # Delete the report file if it exists
+    filepath = os.path.join(UPLOAD_FOLDER, report_filename)
+    if os.path.isfile(filepath):
+        try:
+            os.remove(filepath)
+        except OSError:
+            # File deletion failed but history is already updated
+            # This is acceptable as the main goal (removing from history) succeeded
+            pass
+
+    # Also delete the original uploaded file if it exists
+    uuid_part = report_filename.replace("_KPI_Report.xlsx", "")
+    for ext in ALLOWED_EXTENSIONS:
+        original_file = os.path.join(UPLOAD_FOLDER, f"{uuid_part}.{ext}")
+        if os.path.isfile(original_file):
+            try:
+                os.remove(original_file)
+            except OSError:
+                # Original file deletion failed but this is not critical
+                pass
+
+    flash("Rapport supprimé avec succès.", "info")
+    return redirect(url_for("reports"))
 
 
 if __name__ == "__main__":
