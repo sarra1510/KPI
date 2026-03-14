@@ -129,48 +129,68 @@
     .nx-nav-item:hover { background: var(--nx-teal-light); color: var(--nx-teal-dark); }
     .nx-nav-item.active { background: var(--nx-teal-light); color: var(--nx-teal-dark); font-weight: 700; border-bottom: 2px solid var(--nx-teal); }
 
-    /* ── Table Reference Index ── */
+    /* ── Floating Table Reference Index (Left Side) ── */
     .nx-table-index {
+      position: fixed;
+      top: 120px;
+      left: 20px;
+      width: 220px;
+      max-height: calc(100vh - 150px);
+      overflow-y: auto;
       background: #fff;
       border-radius: 1rem;
-      box-shadow: 0 2px 12px rgba(0,0,0,.07);
-      padding: 1rem 1.25rem;
-      margin-bottom: 1.5rem;
+      box-shadow: 0 4px 24px rgba(0,0,0,.12);
+      padding: 1rem 1rem;
+      z-index: 1000;
+      transition: opacity .2s, transform .2s;
+    }
+    .nx-table-index:empty,
+    .nx-table-index.hidden {
+      display: none;
+    }
+    .nx-table-index-list li.hidden-item {
+      display: none;
     }
     .nx-table-index-title {
-      font-size: .75rem;
+      font-size: .7rem;
       font-weight: 700;
       color: #9ca3af;
       letter-spacing: .1em;
       text-transform: uppercase;
-      margin-bottom: .75rem;
+      margin-bottom: .6rem;
+      display: flex;
+      align-items: center;
+      gap: .35rem;
     }
     .nx-table-index-list {
       display: flex;
-      flex-wrap: wrap;
-      gap: .5rem;
+      flex-direction: column;
+      gap: .4rem;
       list-style: none;
       margin: 0;
       padding: 0;
     }
     .nx-table-index-item {
-      display: inline-flex;
+      display: flex;
       align-items: center;
       gap: .35rem;
       background: var(--nx-teal-light);
       border: 1px solid var(--nx-teal);
-      padding: .4rem .75rem;
+      padding: .45rem .7rem;
       border-radius: .5rem;
-      font-size: .8rem;
+      font-size: .75rem;
       color: var(--nx-teal-dark);
       cursor: pointer;
       transition: background .15s, transform .1s;
       text-decoration: none;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
     }
     .nx-table-index-item:hover { 
       background: var(--nx-teal); 
       color: #fff; 
-      transform: translateY(-1px);
+      transform: translateX(3px);
     }
     .nx-table-index-item:focus-visible {
       background: var(--nx-teal);
@@ -181,10 +201,33 @@
     .nx-table-index-item .badge {
       background: var(--nx-teal-dark);
       color: #fff;
-      font-size: .7rem;
-      padding: .15rem .4rem;
-      border-radius: .3rem;
+      font-size: .65rem;
+      padding: .1rem .35rem;
+      border-radius: .25rem;
+      margin-left: auto;
+      flex-shrink: 0;
     }
+    /* Adjust main content to make room for floating menu */
+    @media (min-width: 992px) {
+      .nx-main-content {
+        margin-left: 250px;
+      }
+    }
+    @media (max-width: 991px) {
+      .nx-table-index {
+        position: static;
+        width: 100%;
+        max-height: none;
+        margin-bottom: 1.5rem;
+      }
+      .nx-table-index-list {
+        flex-direction: row;
+        flex-wrap: wrap;
+      }
+    }
+
+    /* ── Hidden utility class ── */
+    .hidden { display: none !important; }
 
     /* ── Section / accordion cards ── */
     .section-card { border: none; border-radius: 1rem; box-shadow: 0 2px 12px rgba(0,0,0,.07); background: #fff; }
@@ -304,42 +347,42 @@
     {% endif %}
   </div>
 
-  <!-- Table Reference Index -->
+  <!-- Floating Table Reference Index (Left Side) -->
   <div class="nx-table-index" id="table-ref-index">
-    <div class="nx-table-index-title"><i class="bi bi-list-ul" aria-hidden="true"></i> Index des tableaux</div>
+    <div class="nx-table-index-title"><i class="bi bi-list-ul" aria-hidden="true"></i> Tableaux</div>
     <ul class="nx-table-index-list">
       {% if project_totals_rows %}
-      <li><a href="#tbl-anchor-projects-totals" class="nx-table-index-item">
+      <li data-section="overview"><a href="#tbl-anchor-projects-totals" class="nx-table-index-item">
         <i class="bi bi-folder" aria-hidden="true"></i> Temps par projet
         <span class="badge" aria-label="{{ project_totals_rows | length }} lignes">{{ project_totals_rows | length }}</span>
       </a></li>
       {% endif %}
       {% if project_priority_rows %}
-      <li><a href="#tbl-anchor-projects-priority" class="nx-table-index-item">
+      <li data-section="overview"><a href="#tbl-anchor-projects-priority" class="nx-table-index-item">
         <i class="bi bi-bar-chart" aria-hidden="true"></i> Projet & priorité
         <span class="badge" aria-label="{{ project_priority_rows | length }} lignes">{{ project_priority_rows | length }}</span>
       </a></li>
       {% endif %}
       {% if wip_rows %}
-      <li><a href="#tbl-anchor-wip" class="nx-table-index-item">
+      <li data-section="wip"><a href="#tbl-anchor-wip" class="nx-table-index-item">
         <i class="bi bi-arrow-repeat" aria-hidden="true"></i> WIP End Sprint
         <span class="badge" aria-label="{{ wip_rows | length }} lignes">{{ wip_rows | length }}</span>
       </a></li>
       {% endif %}
       {% if no_est_rows %}
-      <li><a href="#tbl-anchor-noest" class="nx-table-index-item">
+      <li data-section="noest"><a href="#tbl-anchor-noest" class="nx-table-index-item">
         <i class="bi bi-exclamation-triangle" aria-hidden="true"></i> Sans estimation
         <span class="badge" aria-label="{{ no_est_rows | length }} lignes">{{ no_est_rows | length }}</span>
       </a></li>
       {% endif %}
       {% if no_tempo_rows %}
-      <li><a href="#tbl-anchor-notempo" class="nx-table-index-item">
+      <li data-section="notempo"><a href="#tbl-anchor-notempo" class="nx-table-index-item">
         <i class="bi bi-stopwatch" aria-hidden="true"></i> Sans tempo
         <span class="badge" aria-label="{{ no_tempo_rows | length }} lignes">{{ no_tempo_rows | length }}</span>
       </a></li>
       {% endif %}
       {% if resolution_rows %}
-      <li><a href="#tbl-anchor-resolution" class="nx-table-index-item">
+      <li data-section="resolution"><a href="#tbl-anchor-resolution" class="nx-table-index-item">
         <i class="bi bi-hourglass-split" aria-hidden="true"></i> Temps de résolution
         <span class="badge" aria-label="{{ resolution_rows | length }} lignes">{{ resolution_rows | length }}</span>
       </a></li>
@@ -348,7 +391,7 @@
   </div>
 
   <!-- Main content (full width) -->
-  <div class="row g-4">
+  <div class="row g-4 nx-main-content">
     <div class="col-12">
 
       <!-- ══ Section: Vue d'ensemble ══ -->
@@ -551,7 +594,7 @@
 
       <!-- ══ Section: WIP ══ -->
       {% if wip_rows %}
-      <div id="section-wip" class="nx-section" style="display:none">
+      <div id="section-wip" class="nx-section hidden">
         <div id="tbl-anchor-wip" class="section-card card mb-3">
           <div class="card-header d-flex align-items-center gap-2">
             <i class="bi bi-arrow-repeat"></i> WIP End Sprint
@@ -586,7 +629,7 @@
 
       <!-- ══ Section: Sans estimation ══ -->
       {% if no_est_rows %}
-      <div id="section-noest" class="nx-section" style="display:none">
+      <div id="section-noest" class="nx-section hidden">
         <div id="tbl-anchor-noest" class="section-card card mb-3">
           <div class="card-header d-flex align-items-center gap-2">
             <i class="bi bi-exclamation-triangle"></i> Tickets sans estimation
@@ -621,7 +664,7 @@
 
       <!-- ══ Section: Sans tempo ══ -->
       {% if no_tempo_rows %}
-      <div id="section-notempo" class="nx-section" style="display:none">
+      <div id="section-notempo" class="nx-section hidden">
         <div id="tbl-anchor-notempo" class="section-card card mb-3">
           <div class="card-header d-flex align-items-center gap-2">
             <i class="bi bi-stopwatch"></i> Tickets sans tempo (sans worklog)
@@ -656,7 +699,7 @@
 
       <!-- ══ Section: Temps de résolution ══ -->
       {% if resolution_rows %}
-      <div id="section-resolution" class="nx-section" style="display:none">
+      <div id="section-resolution" class="nx-section hidden">
         <div id="tbl-anchor-resolution" class="section-card card mb-3">
           <div class="card-header d-flex align-items-center gap-2">
             <i class="bi bi-hourglass-split"></i> Temps de résolution par ticket
@@ -718,25 +761,58 @@
 </div><!-- /container -->
 
 <script>
+function updateTableIndex(sectionName) {
+  // Show only table references for the current section
+  const allItems = document.querySelectorAll('.nx-table-index-list li[data-section]');
+  let hasVisibleItems = false;
+  
+  allItems.forEach(function(item) {
+    const itemSection = item.getAttribute('data-section');
+    if (itemSection === sectionName) {
+      item.classList.remove('hidden-item');
+      hasVisibleItems = true;
+    } else {
+      item.classList.add('hidden-item');
+    }
+  });
+  
+  // Hide/show the entire index based on whether there are visible items
+  const indexEl = document.getElementById('table-ref-index');
+  if (indexEl) {
+    if (hasVisibleItems) {
+      indexEl.classList.remove('hidden');
+    } else {
+      indexEl.classList.add('hidden');
+    }
+  }
+}
+
 function nxNav(sectionName, clickedEl) {
   // 1. Remove 'active' from all nav items
-  var allNav = document.querySelectorAll('.nx-nav-item');
-  for (var i = 0; i < allNav.length; i++) {
-    allNav[i].classList.remove('active');
-  }
+  const allNav = document.querySelectorAll('.nx-nav-item');
+  allNav.forEach(function(nav) {
+    nav.classList.remove('active');
+  });
   // 2. Add 'active' to clicked element
   clickedEl.classList.add('active');
   // 3. Hide all sections
-  var allSections = document.querySelectorAll('.nx-section');
-  for (var j = 0; j < allSections.length; j++) {
-    allSections[j].style.display = 'none';
-  }
+  const allSections = document.querySelectorAll('.nx-section');
+  allSections.forEach(function(section) {
+    section.classList.add('hidden');
+  });
   // 4. Show the target section
-  var target = document.getElementById('section-' + sectionName);
+  const target = document.getElementById('section-' + sectionName);
   if (target) {
-    target.style.display = '';
+    target.classList.remove('hidden');
   }
+  // 5. Update the floating table index to show only current section's tables
+  updateTableIndex(sectionName);
 }
+
+// Initialize table index on page load to show overview tables
+document.addEventListener('DOMContentLoaded', function() {
+  updateTableIndex('overview');
+});
 </script>
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-YvpcrYf0tY3lHB60NNkmXc4s9bIOgUxi8T/jzmq0oWnOFvYqbsGH5vxsVLXuLVrJ" crossorigin="anonymous"></script>
 <script>
