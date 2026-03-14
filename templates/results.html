@@ -148,6 +148,9 @@
     .nx-table-index.hidden {
       display: none;
     }
+    .nx-table-index-list li.hidden-item {
+      display: none;
+    }
     .nx-table-index-title {
       font-size: .7rem;
       font-weight: 700;
@@ -222,6 +225,9 @@
         flex-wrap: wrap;
       }
     }
+
+    /* ── Hidden utility class ── */
+    .hidden { display: none !important; }
 
     /* ── Section / accordion cards ── */
     .section-card { border: none; border-radius: 1rem; box-shadow: 0 2px 12px rgba(0,0,0,.07); background: #fff; }
@@ -588,7 +594,7 @@
 
       <!-- ══ Section: WIP ══ -->
       {% if wip_rows %}
-      <div id="section-wip" class="nx-section" style="display:none">
+      <div id="section-wip" class="nx-section hidden">
         <div id="tbl-anchor-wip" class="section-card card mb-3">
           <div class="card-header d-flex align-items-center gap-2">
             <i class="bi bi-arrow-repeat"></i> WIP End Sprint
@@ -623,7 +629,7 @@
 
       <!-- ══ Section: Sans estimation ══ -->
       {% if no_est_rows %}
-      <div id="section-noest" class="nx-section" style="display:none">
+      <div id="section-noest" class="nx-section hidden">
         <div id="tbl-anchor-noest" class="section-card card mb-3">
           <div class="card-header d-flex align-items-center gap-2">
             <i class="bi bi-exclamation-triangle"></i> Tickets sans estimation
@@ -658,7 +664,7 @@
 
       <!-- ══ Section: Sans tempo ══ -->
       {% if no_tempo_rows %}
-      <div id="section-notempo" class="nx-section" style="display:none">
+      <div id="section-notempo" class="nx-section hidden">
         <div id="tbl-anchor-notempo" class="section-card card mb-3">
           <div class="card-header d-flex align-items-center gap-2">
             <i class="bi bi-stopwatch"></i> Tickets sans tempo (sans worklog)
@@ -693,7 +699,7 @@
 
       <!-- ══ Section: Temps de résolution ══ -->
       {% if resolution_rows %}
-      <div id="section-resolution" class="nx-section" style="display:none">
+      <div id="section-resolution" class="nx-section hidden">
         <div id="tbl-anchor-resolution" class="section-card card mb-3">
           <div class="card-header d-flex align-items-center gap-2">
             <i class="bi bi-hourglass-split"></i> Temps de résolution par ticket
@@ -757,21 +763,21 @@
 <script>
 function updateTableIndex(sectionName) {
   // Show only table references for the current section
-  var allItems = document.querySelectorAll('.nx-table-index-list li[data-section]');
-  var hasVisibleItems = false;
+  const allItems = document.querySelectorAll('.nx-table-index-list li[data-section]');
+  let hasVisibleItems = false;
   
-  for (var i = 0; i < allItems.length; i++) {
-    var itemSection = allItems[i].getAttribute('data-section');
+  allItems.forEach(function(item) {
+    const itemSection = item.getAttribute('data-section');
     if (itemSection === sectionName) {
-      allItems[i].style.display = '';
+      item.classList.remove('hidden-item');
       hasVisibleItems = true;
     } else {
-      allItems[i].style.display = 'none';
+      item.classList.add('hidden-item');
     }
-  }
+  });
   
   // Hide/show the entire index based on whether there are visible items
-  var indexEl = document.getElementById('table-ref-index');
+  const indexEl = document.getElementById('table-ref-index');
   if (indexEl) {
     if (hasVisibleItems) {
       indexEl.classList.remove('hidden');
@@ -783,21 +789,21 @@ function updateTableIndex(sectionName) {
 
 function nxNav(sectionName, clickedEl) {
   // 1. Remove 'active' from all nav items
-  var allNav = document.querySelectorAll('.nx-nav-item');
-  for (var i = 0; i < allNav.length; i++) {
-    allNav[i].classList.remove('active');
-  }
+  const allNav = document.querySelectorAll('.nx-nav-item');
+  allNav.forEach(function(nav) {
+    nav.classList.remove('active');
+  });
   // 2. Add 'active' to clicked element
   clickedEl.classList.add('active');
   // 3. Hide all sections
-  var allSections = document.querySelectorAll('.nx-section');
-  for (var j = 0; j < allSections.length; j++) {
-    allSections[j].style.display = 'none';
-  }
+  const allSections = document.querySelectorAll('.nx-section');
+  allSections.forEach(function(section) {
+    section.classList.add('hidden');
+  });
   // 4. Show the target section
-  var target = document.getElementById('section-' + sectionName);
+  const target = document.getElementById('section-' + sectionName);
   if (target) {
-    target.style.display = '';
+    target.classList.remove('hidden');
   }
   // 5. Update the floating table index to show only current section's tables
   updateTableIndex(sectionName);
