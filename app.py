@@ -319,12 +319,31 @@ def calculate():
         "avg_resolution_days": avg_resolution_days,
     }
 
+    # Save KPI data to JSON for later viewing
+    kpi_data_filename = f"{unique_id}_kpi_data.json"
+    kpi_data_path = os.path.join(UPLOAD_FOLDER, kpi_data_filename)
+    kpi_json_data = {
+        "kpis": kpis,
+        "wip_rows": df_to_records(wip_details),
+        "no_est_rows": df_to_records(no_est_details),
+        "no_tempo_rows": df_to_records(no_tempo_details),
+        "resolution_rows": df_to_records(resolution_details),
+        "project_totals_rows": df_to_records(project_totals_df),
+        "project_priority_rows": df_to_records(project_by_priority_df),
+    }
+    try:
+        with open(kpi_data_path, "w", encoding="utf-8") as f:
+            json.dump(kpi_json_data, f, ensure_ascii=False, indent=2)
+    except OSError:
+        pass
+
     # Save to upload history
     save_history({
         "filename": original_filename,
         "uploaded_at": datetime.now().strftime("%Y-%m-%d %H:%M"),
         "capacity": capacity_days,
         "report_filename": report_filename,
+        "kpi_data_filename": kpi_data_filename,
     })
 
     return render_template(
@@ -407,8 +426,72 @@ def delete_report(report_filename):
                 # Original file deletion failed but this is not critical
                 pass
 
+    # Also delete the KPI data JSON file if it exists
+    kpi_data_file = os.path.join(UPLOAD_FOLDER, f"{uuid_part}_kpi_data.json")
+    if os.path.isfile(kpi_data_file):
+        try:
+            os.remove(kpi_data_file)
+        except OSError:
+            pass
+
     flash("Rapport supprimé avec succès.", "info")
     return redirect(url_for("reports"))
+
+
+@app.route("/view-report/<report_filename>")
+def view_report(report_filename):
+    """View a saved KPI report."""
+    import re
+    # Security: validate filename matches expected pattern
+    if not re.fullmatch(r"[0-9a-f]{32}_KPI_Report\.xlsx", report_filename):
+        flash("Fichier non autorisé.", "danger")
+        return redirect(url_for("reports"))
+
+    # Extract UUID part and load KPI data
+    uuid_part = report_filename.replace("_KPI_Report.xlsx", "")
+    kpi_data_filename = f"{uuid_part}_kpi_data.json"
+    kpi_data_path = os.path.join(UPLOAD_FOLDER, kpi_data_filename)
+
+    if not os.path.isfile(kpi_data_path):
+        flash("Données KPI non disponibles pour ce rapport.", "danger")
+        return redirect(url_for("reports"))
+
+    try:
+        with open(kpi_data_path, "r", encoding="utf-8") as f:
+            kpi_json_data = json.load(f)
+    except (json.JSONDecodeError, OSError):
+        flash("Erreur lors de la lecture des données KPI.", "danger")
+        return redirect(url_for("reports"))
+
+    return render_template(
+        "results.html",
+        kpis=kpi_json_data.get("kpis", {}),
+        wip_rows=kpi_json_data.get("wip_rows", []),
+        no_est_rows=kpi_json_data.get("no_est_rows", []),
+        no_tempo_rows=kpi_json_data.get("no_tempo_rows", []),
+        resolution_rows=kpi_json_data.get("resolution_rows", []),
+        project_totals_rows=kpi_json_data.get("project_totals_rows", []),
+        project_priority_rows=kpi_json_data.get("project_priority_rows", []),
+        report_filename=report_filename,
+    )
+
+
+@app.route("/current")
+def current_calculation():
+    """View the most recent KPI calculation if it exists."""
+    history = load_history()
+    if not history:
+        flash("Aucune analyse KPI disponible. Commencez par importer vos données.", "info")
+        return redirect(url_for("index"))
+
+    # Get the most recent report
+    latest = history[0]
+    report_filename = latest.get("report_filename")
+    if not report_filename:
+        flash("Aucune analyse KPI disponible.", "info")
+        return redirect(url_for("index"))
+
+    return redirect(url_for("view_report", report_filename=report_filename))
 
 
 if __name__ == "__main__":
