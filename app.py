@@ -1,5 +1,7 @@
 """
-Flask web interface for the Sprint KPI Calculator.
+Flask web interface for the KPI Calculator.
+Supports both Scrum (3-sheet: Start, End Sprint, Worklogs) and Kanban (single Worklogs sheet)
+formats. The file format is auto-detected on upload.
 Provides a drag-and-drop file upload and a KPI dashboard in the browser.
 """
 
@@ -19,7 +21,7 @@ from flask import (
     send_from_directory,
 )
 
-from sprint_kpi_calculator import (
+from kpi_calculator import (
     find_sheet_name,
     find_header_row,
     clean_dataframe,
@@ -30,7 +32,11 @@ from sprint_kpi_calculator import (
     find_no_estimation,
     find_no_tempo,
     calc_resolution_time,
+    calc_resolution_time_kanban,
     calc_time_per_project,
+    detect_mode,
+    _deduplicate_worklogs,
+    _filter_empty_keys,
     SHEET_START,
     SHEET_END,
     SHEET_WORKLOG,
@@ -78,7 +84,15 @@ def allowed_file(filename):
 def load_data_web(filepath):
     """
     Non-interactive version of load_data() for the web interface.
+    Auto-detects Kanban (single Worklogs sheet) vs Scrum (3 sheets: Start, End Sprint, Worklogs).
     Raises ValueError instead of calling input() when sheets cannot be detected.
+
+    Returns:
+        tuple: (mode, df_start, df_end, df_worklog)
+            - mode: "scrum" or "kanban"
+            - df_start: Start sheet (Scrum) or empty DataFrame (Kanban)
+            - df_end: End Sprint sheet (Scrum) or deduplicated tickets from Worklogs (Kanban)
+            - df_worklog: Worklogs sheet (both modes)
     """
     try:
         with pd.ExcelFile(filepath) as xls:
@@ -86,6 +100,34 @@ def load_data_web(filepath):
     except Exception as e:
         raise ValueError(f"Impossible d'ouvrir le fichier Excel : {e}")
 
+    mode = detect_mode(available_sheets)
+
+    sheet_worklog = find_sheet_name(
+        available_sheets,
+        SHEET_WORKLOG,
+        keywords=["worklog", "worklogs", "tempo"],
+    )
+
+    if not sheet_worklog:
+        raise ValueError(
+            f"Feuille Worklogs non détectée. "
+            f"Feuilles disponibles : {', '.join(available_sheets)}"
+        )
+
+    if mode == "kanban":
+        h_wl = find_header_row(filepath, sheet_worklog)
+        try:
+            df_worklog = pd.read_excel(filepath, sheet_name=sheet_worklog, header=h_wl)
+        except Exception as e:
+            raise ValueError(f"Erreur de lecture du fichier : {e}")
+
+        df_worklog = clean_dataframe(df_worklog)
+        df_worklog = _filter_empty_keys(df_worklog, ["Issue Key", "Issue key", "Key"], "Worklogs")
+
+        df_tickets = _deduplicate_worklogs(df_worklog)
+        return mode, pd.DataFrame(), df_tickets, df_worklog
+
+    # Scrum mode: require all 3 sheets
     sheet_start = find_sheet_name(
         available_sheets,
         SHEET_START,
@@ -97,19 +139,12 @@ def load_data_web(filepath):
         SHEET_END,
         keywords=["end", "fin", "sprint end", "end sprint"],
     )
-    sheet_worklog = find_sheet_name(
-        available_sheets,
-        SHEET_WORKLOG,
-        keywords=["worklog", "worklogs", "tempo"],
-    )
 
     missing = []
     if not sheet_start:
         missing.append("Start (début sprint)")
     if not sheet_end:
         missing.append("End Sprint (fin sprint)")
-    if not sheet_worklog:
-        missing.append("Worklogs")
 
     if missing:
         raise ValueError(
@@ -133,24 +168,11 @@ def load_data_web(filepath):
     df_worklog = clean_dataframe(df_worklog)
 
     # Remove rows where Key is empty
-    for candidates, df_ref in [
-        (["Key", "Issue Key", "key", "Clé"], "start"),
-        (["Key", "Issue Key", "key", "Clé"], "end"),
-        (["Issue Key", "Issue key", "Key"], "worklog"),
-    ]:
-        df = df_start if df_ref == "start" else (df_end if df_ref == "end" else df_worklog)
-        for kc in candidates:
-            if kc in df.columns:
-                df = df[df[kc].notna() & (df[kc].astype(str).str.strip() != "")].reset_index(drop=True)
-                break
-        if df_ref == "start":
-            df_start = df
-        elif df_ref == "end":
-            df_end = df
-        else:
-            df_worklog = df
+    df_start = _filter_empty_keys(df_start, ["Key", "Issue Key", "key", "Clé"], "Start")
+    df_end = _filter_empty_keys(df_end, ["Key", "Issue Key", "key", "Clé"], "End Sprint")
+    df_worklog = _filter_empty_keys(df_worklog, ["Issue Key", "Issue key", "Key"], "Worklogs")
 
-    return df_start, df_end, df_worklog
+    return mode, df_start, df_end, df_worklog
 
 
 def find_key_column_web(df, sheet_name):
@@ -239,19 +261,31 @@ def calculate():
     file.save(filepath)
 
     try:
-        df_start, df_end, df_worklog = load_data_web(filepath)
+        mode, df_start, df_end, df_worklog = load_data_web(filepath)
 
-        key_col_start = find_key_column_web(df_start, SHEET_START)
-        key_col_end = find_key_column_web(df_end, SHEET_END)
+        key_col_end = find_key_column_web(df_end, SHEET_END if mode == "scrum" else SHEET_WORKLOG)
 
         capacity_util, total_logged = calc_capacity_utilization(df_worklog, capacity_hours)
         total_logged_days = round(total_logged / HOURS_PER_DAY, 2)
         throughput, throughput_details = calc_throughput(df_end, key_col_end)
         wip_count, wip_details = calc_wip_end_sprint(df_end, key_col_end)
         no_est_count, no_est_details = find_no_estimation(df_end, key_col_end)
-        no_tempo_count, no_tempo_details = find_no_tempo(df_end, df_worklog, key_col_end)
-        avg_resolution_days, resolution_details = calc_resolution_time(df_end, df_worklog, key_col_end)
-        project_totals_df, project_by_priority_df = calc_time_per_project(df_worklog, df_end, key_col_end)
+
+        if mode == "kanban":
+            no_tempo_count, no_tempo_details = 0, pd.DataFrame()
+            avg_resolution_days, resolution_details = calc_resolution_time_kanban(
+                df_end, df_worklog, key_col_end
+            )
+            project_totals_df, project_by_priority_df = calc_time_per_project(df_worklog)
+        else:
+            key_col_start = find_key_column_web(df_start, SHEET_START)
+            no_tempo_count, no_tempo_details = find_no_tempo(df_end, df_worklog, key_col_end)
+            avg_resolution_days, resolution_details = calc_resolution_time(
+                df_end, df_worklog, key_col_end
+            )
+            project_totals_df, project_by_priority_df = calc_time_per_project(
+                df_worklog, df_end, key_col_end
+            )
 
     except ValueError as e:
         flash(str(e), "danger")
@@ -307,6 +341,7 @@ def calculate():
             project_by_priority_df.to_excel(writer, sheet_name="Temps par projet-priorité", index=False)
 
     kpis = {
+        "mode": mode,
         "capacity_days": capacity_days,
         "capacity_hours": capacity_hours,
         "total_logged": total_logged,
