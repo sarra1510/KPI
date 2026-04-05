@@ -81,8 +81,8 @@ def load_data_web(filepath):
     Raises ValueError instead of calling input() when sheets cannot be detected.
     """
     try:
-        xls = pd.ExcelFile(filepath)
-        available_sheets = xls.sheet_names
+        with pd.ExcelFile(filepath) as xls:
+            available_sheets = xls.sheet_names
     except Exception as e:
         raise ValueError(f"Impossible d'ouvrir le fichier Excel : {e}")
 
