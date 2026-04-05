@@ -276,7 +276,7 @@ def calculate():
             avg_resolution_days, resolution_details = calc_resolution_time_kanban(
                 df_end, df_worklog, key_col_end
             )
-            project_totals_df, project_by_priority_df = calc_time_per_project(df_worklog)
+            project_totals_df, project_by_priority_df = calc_time_per_project(df_worklog, None, None)
         else:
             key_col_start = find_key_column_web(df_start, SHEET_START)
             no_tempo_count, no_tempo_details = find_no_tempo(df_end, df_worklog, key_col_end)

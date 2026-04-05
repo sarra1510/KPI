@@ -33,6 +33,8 @@ SHEET_WORKLOG = "Worklogs"
 
 HOURS_PER_DAY = 8
 
+SECONDS_PER_DAY = 86400
+
 DONE_STATUSES = [
     "closed",
     "customer pending",
@@ -354,6 +356,7 @@ def _deduplicate_worklogs(df_worklog):
     if work_date_col is not None:
         df_sorted = df_worklog.copy()
         df_sorted[work_date_col] = pd.to_datetime(df_sorted[work_date_col], errors="coerce")
+        # Sort ascending with NaT first so keep='last' retains the most recent valid date
         df_sorted = df_sorted.sort_values(work_date_col, ascending=True, na_position="first")
         df_tickets = df_sorted.drop_duplicates(subset=[key_col], keep="last").reset_index(drop=True)
     else:
@@ -545,7 +548,7 @@ def calc_resolution_time(df_end, df_worklog, key_col_end):
 
     # Calculate resolution time in days
     merged["Temps de résolution (j)"] = (
-        (merged[resolved_col] - merged["_first_work_date"]).dt.total_seconds() / 86400
+        (merged[resolved_col] - merged["_first_work_date"]).dt.total_seconds() / SECONDS_PER_DAY
     ).round(2)
 
     # Filter out negative values (data quality issues)
@@ -659,7 +662,7 @@ def calc_resolution_time_kanban(df_tickets, df_worklog, key_col):
 
     # Calculate resolution time in days
     work_range["Temps de résolution (j)"] = (
-        (work_range["_last_work_date"] - work_range["_first_work_date"]).dt.total_seconds() / 86400
+        (work_range["_last_work_date"] - work_range["_first_work_date"]).dt.total_seconds() / SECONDS_PER_DAY
     ).round(2)
 
     # Filter out negatives (data quality issues)
