@@ -1115,16 +1115,18 @@ document.addEventListener('DOMContentLoaded', function() {
       var projData = kpi.hours_by_project || [];
       document.getElementById('pu-proj-badge').textContent = projData.length;
       if (projData.length === 0) {
-        projTbody.innerHTML = '<tr><td colspan="4" style="text-align:center;color:var(--jira-neutral-light);padding:1.5rem;">Aucune donnée</td></tr>';
+        var emptyRow = projTbody.insertRow();
+        var emptyCell = emptyRow.insertCell();
+        emptyCell.colSpan = 4;
+        emptyCell.style.cssText = 'text-align:center;color:var(--jira-neutral-light);padding:1.5rem;';
+        emptyCell.textContent = 'Aucune donnée';
       } else {
         projData.forEach(function(row) {
-          var tr = document.createElement('tr');
-          tr.innerHTML =
-            '<td class="key-nowrap">' + row.Projet + '</td>' +
-            '<td>' + row.Heures + '</td>' +
-            '<td>' + row.Jours + '</td>' +
-            '<td>' + row.pct + '%</td>';
-          projTbody.appendChild(tr);
+          var tr = projTbody.insertRow();
+          var c1 = tr.insertCell(); c1.className = 'key-nowrap'; c1.textContent = row.Projet;
+          var c2 = tr.insertCell(); c2.textContent = row.Heures;
+          var c3 = tr.insertCell(); c3.textContent = row.Jours;
+          var c4 = tr.insertCell(); c4.textContent = row.pct + '%';
         });
       }
 
@@ -1134,12 +1136,16 @@ document.addEventListener('DOMContentLoaded', function() {
       var typesData = kpi.issue_types || [];
       document.getElementById('pu-types-badge').textContent = typesData.length;
       if (typesData.length === 0) {
-        typesTbody.innerHTML = '<tr><td colspan="2" style="text-align:center;color:var(--jira-neutral-light);padding:1.5rem;">Aucune donnée</td></tr>';
+        var emptyRow2 = typesTbody.insertRow();
+        var emptyCell2 = emptyRow2.insertCell();
+        emptyCell2.colSpan = 2;
+        emptyCell2.style.cssText = 'text-align:center;color:var(--jira-neutral-light);padding:1.5rem;';
+        emptyCell2.textContent = 'Aucune donnée';
       } else {
         typesData.forEach(function(row) {
-          var tr = document.createElement('tr');
-          tr.innerHTML = '<td>' + row.Type + '</td><td>' + row.Count + '</td>';
-          typesTbody.appendChild(tr);
+          var tr = typesTbody.insertRow();
+          var c1 = tr.insertCell(); c1.textContent = row.Type;
+          var c2 = tr.insertCell(); c2.textContent = row.Count;
         });
       }
 

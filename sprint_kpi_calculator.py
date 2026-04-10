@@ -578,6 +578,15 @@ def calc_kpi_per_user(df_end, df_worklog, key_col_end):
       - hours_by_project: breakdown of hours by project (Projet, Heures, Jours, pct)
       - issue_types: count of resolved tickets by Issue Type
 
+    Args:
+        df_end (DataFrame): End Sprint / tickets sheet with columns such as
+            Assignee, Resolved, Issue Type, etc.
+        df_worklog (DataFrame): Worklogs sheet with columns such as
+            Full Name / Username, Hours, Issue Key, etc.
+        key_col_end (str): Name of the key column in df_end (kept for API
+            consistency with other calc_* functions; not used directly here
+            since user matching is done via Assignee and worklog user columns).
+
     Returns:
         user_list (list): sorted list of unique usernames
         user_kpi_data (dict): dict keyed by username with KPI data
