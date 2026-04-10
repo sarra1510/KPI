@@ -34,6 +34,7 @@ from kpi_calculator import (
     calc_resolution_time,
     calc_resolution_time_kanban,
     calc_time_per_project,
+    calc_kpi_per_user,
     detect_mode,
     _deduplicate_worklogs,
     _filter_empty_keys,
@@ -287,6 +288,8 @@ def calculate():
                 df_worklog, df_end, key_col_end
             )
 
+        user_list, user_kpi_data = calc_kpi_per_user(df_end, df_worklog, key_col_end)
+
     except ValueError as e:
         flash(str(e), "danger")
         os.remove(filepath)
@@ -365,6 +368,8 @@ def calculate():
         "resolution_rows": df_to_records(resolution_details),
         "project_totals_rows": df_to_records(project_totals_df),
         "project_priority_rows": df_to_records(project_by_priority_df),
+        "user_list": user_list,
+        "user_kpi_data": user_kpi_data,
     }
     try:
         with open(kpi_data_path, "w", encoding="utf-8") as f:
@@ -390,6 +395,8 @@ def calculate():
         resolution_rows=df_to_records(resolution_details),
         project_totals_rows=df_to_records(project_totals_df),
         project_priority_rows=df_to_records(project_by_priority_df),
+        user_list=user_list,
+        user_kpi_data=user_kpi_data,
         report_filename=report_filename,
     )
 
@@ -507,6 +514,8 @@ def view_report(report_filename):
         resolution_rows=kpi_json_data.get("resolution_rows", []),
         project_totals_rows=kpi_json_data.get("project_totals_rows", []),
         project_priority_rows=kpi_json_data.get("project_priority_rows", []),
+        user_list=kpi_json_data.get("user_list", []),
+        user_kpi_data=kpi_json_data.get("user_kpi_data", {}),
         report_filename=report_filename,
     )
 

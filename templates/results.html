@@ -516,6 +516,11 @@
       <span class="jira-tab-badge">{{ no_tempo_rows | length }}</span>
     </a>
     {% endif %}
+    {% if user_list %}
+    <a href="javascript:void(0)" class="jira-tab" onclick="switchTab('peruser', this)">
+      <i class="bi bi-person-fill"></i> KPI par utilisateur
+    </a>
+    {% endif %}
   </div>
   
   <div class="jira-content">
@@ -909,10 +914,117 @@
     </div>
     {% endif %}
     
+    <!-- ═══════════════════════════════════════════════════════════════ -->
+    <!-- SECTION: KPI par utilisateur -->
+    <!-- ═══════════════════════════════════════════════════════════════ -->
+    {% if user_list %}
+    <div id="section-peruser" class="jira-section hidden">
+
+      <!-- User selector -->
+      <div class="jira-card" style="margin-bottom:1.5rem;">
+        <div class="jira-card-body" style="padding:1.25rem;">
+          <label for="peruser-select" class="form-label" style="font-weight:600;color:var(--jira-neutral-dark);font-size:.875rem;">
+            <i class="bi bi-person-fill" style="color:var(--jira-blue);"></i>
+            Sélectionner un utilisateur
+          </label>
+          <select id="peruser-select" class="form-select" style="max-width:400px;font-size:.875rem;">
+            <option value="">— Choisir un utilisateur —</option>
+            {% for u in user_list %}
+            <option value="{{ u }}">{{ u }}</option>
+            {% endfor %}
+          </select>
+        </div>
+      </div>
+
+      <!-- Per-user KPI content (hidden until user selected) -->
+      <div id="peruser-content" style="display:none;">
+
+        <!-- KPI Cards -->
+        <div class="jira-kpi-grid" id="peruser-kpi-cards">
+          <div class="jira-kpi-card">
+            <div class="jira-kpi-icon status-green"><i class="bi bi-check-circle-fill"></i></div>
+            <div class="jira-kpi-value status-green" id="pu-resolved">—</div>
+            <div class="jira-kpi-label">Tickets traités</div>
+          </div>
+          <div class="jira-kpi-card">
+            <div class="jira-kpi-icon status-blue"><i class="bi bi-clock-fill"></i></div>
+            <div class="jira-kpi-value status-blue" id="pu-hours">—</div>
+            <div class="jira-kpi-label">Heures loguées</div>
+          </div>
+        </div>
+
+        <!-- Hours by project table -->
+        <div class="jira-card" id="pu-proj-card">
+          <div class="jira-card-header" data-bs-toggle="collapse" data-bs-target="#pu-proj-body" aria-expanded="true">
+            <i class="bi bi-folder" style="color:var(--jira-blue);"></i>
+            <h3 class="jira-card-title">Heures par projet</h3>
+            <span class="jira-card-badge" id="pu-proj-badge">0</span>
+            <i class="bi bi-chevron-down jira-card-chevron"></i>
+          </div>
+          <div id="pu-proj-body" class="collapse show">
+            <div class="jira-card-body">
+              <div class="table-responsive">
+                <table class="jira-table">
+                  <thead>
+                    <tr>
+                      <th>Projet</th>
+                      <th>Heures</th>
+                      <th>Jours</th>
+                      <th>% du total</th>
+                    </tr>
+                  </thead>
+                  <tbody id="pu-proj-tbody"></tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Issue types table -->
+        <div class="jira-card" id="pu-types-card">
+          <div class="jira-card-header" data-bs-toggle="collapse" data-bs-target="#pu-types-body" aria-expanded="true">
+            <i class="bi bi-tag-fill" style="color:var(--jira-purple);"></i>
+            <h3 class="jira-card-title">Types de tickets traités</h3>
+            <span class="jira-card-badge" id="pu-types-badge">0</span>
+            <i class="bi bi-chevron-down jira-card-chevron"></i>
+          </div>
+          <div id="pu-types-body" class="collapse show">
+            <div class="jira-card-body">
+              <div class="table-responsive">
+                <table class="jira-table">
+                  <thead>
+                    <tr>
+                      <th>Type de ticket</th>
+                      <th>Nombre</th>
+                    </tr>
+                  </thead>
+                  <tbody id="pu-types-tbody"></tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </div><!-- /peruser-content -->
+
+      <!-- Empty state when no user selected -->
+      <div id="peruser-empty" class="jira-empty">
+        <div class="jira-empty-icon"><i class="bi bi-person-circle"></i></div>
+        <div class="jira-empty-text">Sélectionnez un utilisateur pour afficher ses KPIs</div>
+      </div>
+
+    </div><!-- /section-peruser -->
+    {% endif %}
+    
   </div><!-- /jira-content -->
 </main>
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-YvpcrYf0tY3lHB60NNkmXc4s9bIOgUxi8T/jzmq0oWnOFvYqbsGH5vxsVLXuLVrJ" crossorigin="anonymous"></script>
+{% if user_list %}
+<script>
+var userKpiData = {{ user_kpi_data | tojson }};
+</script>
+{% endif %}
 <script>
 // Tab switching
 function switchTab(sectionName, clickedEl) {
@@ -973,6 +1085,68 @@ document.addEventListener('DOMContentLoaded', function() {
   initPagination('table-noest', 'pag-noest');
   initPagination('table-notempo', 'pag-notempo');
   initPagination('table-resolution', 'pag-resolution');
+
+  // Per-user KPI section
+  var peruserSelect = document.getElementById('peruser-select');
+  if (peruserSelect && typeof userKpiData !== 'undefined') {
+    peruserSelect.addEventListener('change', function() {
+      var user = this.value;
+      var content = document.getElementById('peruser-content');
+      var empty = document.getElementById('peruser-empty');
+      if (!user) {
+        content.style.display = 'none';
+        empty.style.display = '';
+        return;
+      }
+      var kpi = userKpiData[user];
+      if (!kpi) {
+        content.style.display = 'none';
+        empty.style.display = '';
+        return;
+      }
+
+      // KPI cards
+      document.getElementById('pu-resolved').textContent = kpi.resolved_count;
+      document.getElementById('pu-hours').textContent = kpi.total_hours + ' h';
+
+      // Hours by project table
+      var projTbody = document.getElementById('pu-proj-tbody');
+      projTbody.innerHTML = '';
+      var projData = kpi.hours_by_project || [];
+      document.getElementById('pu-proj-badge').textContent = projData.length;
+      if (projData.length === 0) {
+        projTbody.innerHTML = '<tr><td colspan="4" style="text-align:center;color:var(--jira-neutral-light);padding:1.5rem;">Aucune donnée</td></tr>';
+      } else {
+        projData.forEach(function(row) {
+          var tr = document.createElement('tr');
+          tr.innerHTML =
+            '<td class="key-nowrap">' + row.Projet + '</td>' +
+            '<td>' + row.Heures + '</td>' +
+            '<td>' + row.Jours + '</td>' +
+            '<td>' + row.pct + '%</td>';
+          projTbody.appendChild(tr);
+        });
+      }
+
+      // Issue types table
+      var typesTbody = document.getElementById('pu-types-tbody');
+      typesTbody.innerHTML = '';
+      var typesData = kpi.issue_types || [];
+      document.getElementById('pu-types-badge').textContent = typesData.length;
+      if (typesData.length === 0) {
+        typesTbody.innerHTML = '<tr><td colspan="2" style="text-align:center;color:var(--jira-neutral-light);padding:1.5rem;">Aucune donnée</td></tr>';
+      } else {
+        typesData.forEach(function(row) {
+          var tr = document.createElement('tr');
+          tr.innerHTML = '<td>' + row.Type + '</td><td>' + row.Count + '</td>';
+          typesTbody.appendChild(tr);
+        });
+      }
+
+      empty.style.display = 'none';
+      content.style.display = '';
+    });
+  }
 });
 </script>
 </body>
