@@ -839,9 +839,14 @@ def calc_kpi_per_user(df_end, df_worklog, key_col_end):
         else:
             kpi["resolved_count"] = 0
 
-        # Total logged hours
-        if user_col_wl is not None and hours_col is not None:
+        # Compute user worklog mask once (reused for total hours and hours by project)
+        if user_col_wl is not None:
             user_mask = df_worklog[user_col_wl].astype(str).str.strip() == user
+        else:
+            user_mask = None
+
+        # Total logged hours
+        if user_mask is not None and hours_col is not None:
             kpi["total_hours"] = round(
                 float(pd.to_numeric(df_worklog.loc[user_mask, hours_col], errors="coerce").fillna(0).sum()),
                 2,
@@ -850,8 +855,7 @@ def calc_kpi_per_user(df_end, df_worklog, key_col_end):
             kpi["total_hours"] = 0.0
 
         # Hours by project
-        if user_col_wl is not None and hours_col is not None and key_col_wl is not None:
-            user_mask = df_worklog[user_col_wl].astype(str).str.strip() == user
+        if user_mask is not None and hours_col is not None and key_col_wl is not None:
             df_user = df_worklog[user_mask].copy()
             df_user["Projet"] = df_user[key_col_wl].astype(str).str.extract(
                 r"^([A-Z][A-Z0-9]*)-", expand=False
