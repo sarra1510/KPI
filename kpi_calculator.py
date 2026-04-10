@@ -770,6 +770,133 @@ def calc_time_per_project(df_worklog, df_end=None, key_col_end=None):
     return totals, by_priority
 
 
+def calc_kpi_per_user(df_end, df_worklog, key_col_end):
+    """Compute per-user KPIs from End Sprint and Worklogs sheets.
+
+    For each user found in the Assignee (End Sprint) or user columns (Worklogs),
+    calculates:
+      - resolved_count: number of resolved tickets assigned to this user
+      - total_hours: total logged hours for this user
+      - hours_by_project: breakdown of hours by project (Projet, Heures, Jours, pct)
+      - issue_types: count of resolved tickets by Issue Type
+
+    Args:
+        df_end (DataFrame): End Sprint / tickets sheet with columns such as
+            Assignee, Resolved, Issue Type, etc.
+        df_worklog (DataFrame): Worklogs sheet with columns such as
+            Full Name / Username, Hours, Issue Key, etc.
+        key_col_end (str): Name of the key column in df_end (kept for API
+            consistency with other calc_* functions; not used directly here
+            since user matching is done via Assignee and worklog user columns).
+
+    Returns:
+        user_list (list): sorted list of unique usernames
+        user_kpi_data (dict): dict keyed by username with KPI data
+    """
+    # Locate relevant columns
+    user_col_wl = find_column(df_worklog, [
+        "Full Name", "full name", "Username", "username", "Assignee", "Author", "author",
+    ])
+    hours_col = find_column(df_worklog, [
+        "Hours", "hours", "Time Spent", "Time spent", "Heures", "HOURS",
+    ])
+    key_col_wl = find_column(df_worklog, [
+        "Issue Key", "Issue key", "issue key", "ISSUE KEY", "Key", "key",
+    ])
+    assignee_col = find_column(df_end, ["Assignee", "assignee", "ASSIGNEE"])
+    resolved_col = find_column(df_end, ["Resolved", "resolved", "Resolution Date", "RESOLVED"])
+    issue_type_col = find_column(df_end, [
+        "Issue Type", "Issue type", "issue type", "ISSUE TYPE", "Type",
+    ])
+
+    # Collect unique users from both sheets
+    users: set = set()
+    if user_col_wl is not None:
+        for u in df_worklog[user_col_wl].dropna().astype(str).str.strip().unique():
+            if u and u.lower() != "nan":
+                users.add(u)
+    if assignee_col is not None:
+        for u in df_end[assignee_col].dropna().astype(str).str.strip().unique():
+            if u and u.lower() != "nan":
+                users.add(u)
+
+    user_list = sorted(users)
+    if not user_list:
+        return [], {}
+
+    user_kpi_data: dict = {}
+
+    for user in user_list:
+        kpi: dict = {}
+
+        # Resolved ticket count
+        if assignee_col is not None and resolved_col is not None:
+            mask = (
+                df_end[resolved_col].notna()
+                & (df_end[assignee_col].astype(str).str.strip() == user)
+            )
+            kpi["resolved_count"] = int(mask.sum())
+        else:
+            kpi["resolved_count"] = 0
+
+        # Compute user worklog mask once (reused for total hours and hours by project)
+        if user_col_wl is not None:
+            user_mask = df_worklog[user_col_wl].astype(str).str.strip() == user
+        else:
+            user_mask = None
+
+        # Total logged hours
+        if user_mask is not None and hours_col is not None:
+            kpi["total_hours"] = round(
+                float(pd.to_numeric(df_worklog.loc[user_mask, hours_col], errors="coerce").fillna(0).sum()),
+                2,
+            )
+        else:
+            kpi["total_hours"] = 0.0
+
+        # Hours by project
+        if user_mask is not None and hours_col is not None and key_col_wl is not None:
+            df_user = df_worklog[user_mask].copy()
+            df_user["Projet"] = df_user[key_col_wl].astype(str).str.extract(
+                r"^([A-Z][A-Z0-9]*)-", expand=False
+            )
+            df_user = df_user.dropna(subset=["Projet"])
+            if not df_user.empty:
+                by_proj = df_user.groupby("Projet")[hours_col].sum().reset_index()
+                by_proj.columns = ["Projet", "Heures"]
+                by_proj["Heures"] = by_proj["Heures"].round(2)
+                total_h = float(by_proj["Heures"].sum())
+                by_proj["Jours"] = (by_proj["Heures"] / HOURS_PER_DAY).round(2)
+                by_proj["pct"] = (
+                    (by_proj["Heures"] / total_h * 100).round(1) if total_h > 0 else 0.0
+                )
+                by_proj = by_proj.sort_values("Heures", ascending=False).reset_index(drop=True)
+                kpi["hours_by_project"] = by_proj.to_dict(orient="records")
+            else:
+                kpi["hours_by_project"] = []
+        else:
+            kpi["hours_by_project"] = []
+
+        # Issue types for resolved tickets
+        if assignee_col is not None and resolved_col is not None and issue_type_col is not None:
+            user_resolved = df_end[
+                df_end[resolved_col].notna()
+                & (df_end[assignee_col].astype(str).str.strip() == user)
+            ]
+            if not user_resolved.empty:
+                counts = user_resolved[issue_type_col].value_counts().reset_index()
+                counts.columns = ["Type", "Count"]
+                kpi["issue_types"] = counts.to_dict(orient="records")
+            else:
+                kpi["issue_types"] = []
+        else:
+            kpi["issue_types"] = []
+
+        user_kpi_data[user] = kpi
+
+    return user_list, user_kpi_data
+
+
 def get_capacity_input():
     """Prompt user for team capacity in days (converted to hours internally)."""
     while True:
