@@ -770,7 +770,7 @@ def calc_time_per_project(df_worklog, df_end=None, key_col_end=None):
     return totals, by_priority
 
 
-def calc_kpi_per_user(df_end, df_worklog, key_col_end):
+def calc_kpi_per_user(df_end, df_worklog, key_col_end, mode="scrum"):
     """Compute per-user KPIs from End Sprint and Worklogs sheets.
 
     For each user found in the Assignee (End Sprint) or user columns (Worklogs),
@@ -788,6 +788,10 @@ def calc_kpi_per_user(df_end, df_worklog, key_col_end):
         key_col_end (str): Name of the key column in df_end (kept for API
             consistency with other calc_* functions; not used directly here
             since user matching is done via Assignee and worklog user columns).
+        mode (str): "scrum" or "kanban". Defaults to "scrum" for backward
+            compatibility. In Kanban mode, resolved_count and issue_types are
+            derived from Issue Status and Issue Key columns in df_end/worklogs
+            instead of Assignee + Resolved columns.
 
     Returns:
         user_list (list): sorted list of unique usernames
@@ -809,6 +813,16 @@ def calc_kpi_per_user(df_end, df_worklog, key_col_end):
         "Issue Type", "Issue type", "issue type", "ISSUE TYPE", "Type",
     ])
 
+    # Kanban: locate Issue Status and key columns in df_end
+    if mode == "kanban":
+        status_col_end = find_column(df_end, [
+            "Issue Status", "issue status", "ISSUE STATUS",
+            "Status", "status", "STATUS",
+        ])
+        key_col_end_actual = find_column(df_end, [
+            "Issue Key", "Issue key", "issue key", "ISSUE KEY", "Key", "key",
+        ]) or key_col_end
+
     # Collect unique users from both sheets
     users: set = set()
     if user_col_wl is not None:
@@ -829,21 +843,79 @@ def calc_kpi_per_user(df_end, df_worklog, key_col_end):
     for user in user_list:
         kpi: dict = {}
 
-        # Resolved ticket count
-        if assignee_col is not None and resolved_col is not None:
-            mask = (
-                df_end[resolved_col].notna()
-                & (df_end[assignee_col].astype(str).str.strip() == user)
-            )
-            kpi["resolved_count"] = int(mask.sum())
-        else:
-            kpi["resolved_count"] = 0
-
         # Compute user worklog mask once (reused for total hours and hours by project)
         if user_col_wl is not None:
             user_mask = df_worklog[user_col_wl].astype(str).str.strip() == user
         else:
             user_mask = None
+
+        if mode == "kanban":
+            # Kanban: get unique Issue Keys the user has logged time against
+            if user_mask is not None and key_col_wl is not None:
+                user_keys = set(
+                    df_worklog.loc[user_mask, key_col_wl]
+                    .dropna()
+                    .astype(str)
+                    .str.strip()
+                    .unique()
+                )
+            else:
+                user_keys = set()
+
+            # resolved_count: tickets in df_end whose key is in user_keys AND
+            # whose Issue Status is in DONE_STATUSES
+            if (user_keys and status_col_end is not None
+                    and key_col_end_actual is not None
+                    and key_col_end_actual in df_end.columns):
+                done_mask = (
+                    df_end[key_col_end_actual].astype(str).str.strip().isin(user_keys)
+                    & df_end[status_col_end].astype(str).str.strip().str.lower().isin(DONE_STATUSES)
+                )
+                kpi["resolved_count"] = int(done_mask.sum())
+            else:
+                kpi["resolved_count"] = 0
+
+            # issue_types: from df_end for the user's keys (all tickets, not just resolved)
+            if (user_keys and issue_type_col is not None
+                    and key_col_end_actual is not None
+                    and key_col_end_actual in df_end.columns):
+                user_tickets = df_end[
+                    df_end[key_col_end_actual].astype(str).str.strip().isin(user_keys)
+                ]
+                if not user_tickets.empty:
+                    counts = user_tickets[issue_type_col].value_counts().reset_index()
+                    counts.columns = ["Type", "Count"]
+                    kpi["issue_types"] = counts.to_dict(orient="records")
+                else:
+                    kpi["issue_types"] = []
+            else:
+                kpi["issue_types"] = []
+
+        else:
+            # Scrum: resolved_count via Assignee + Resolved columns
+            if assignee_col is not None and resolved_col is not None:
+                mask = (
+                    df_end[resolved_col].notna()
+                    & (df_end[assignee_col].astype(str).str.strip() == user)
+                )
+                kpi["resolved_count"] = int(mask.sum())
+            else:
+                kpi["resolved_count"] = 0
+
+            # Scrum: issue_types for resolved tickets
+            if assignee_col is not None and resolved_col is not None and issue_type_col is not None:
+                user_resolved = df_end[
+                    df_end[resolved_col].notna()
+                    & (df_end[assignee_col].astype(str).str.strip() == user)
+                ]
+                if not user_resolved.empty:
+                    counts = user_resolved[issue_type_col].value_counts().reset_index()
+                    counts.columns = ["Type", "Count"]
+                    kpi["issue_types"] = counts.to_dict(orient="records")
+                else:
+                    kpi["issue_types"] = []
+            else:
+                kpi["issue_types"] = []
 
         # Total logged hours
         if user_mask is not None and hours_col is not None:
@@ -876,21 +948,6 @@ def calc_kpi_per_user(df_end, df_worklog, key_col_end):
                 kpi["hours_by_project"] = []
         else:
             kpi["hours_by_project"] = []
-
-        # Issue types for resolved tickets
-        if assignee_col is not None and resolved_col is not None and issue_type_col is not None:
-            user_resolved = df_end[
-                df_end[resolved_col].notna()
-                & (df_end[assignee_col].astype(str).str.strip() == user)
-            ]
-            if not user_resolved.empty:
-                counts = user_resolved[issue_type_col].value_counts().reset_index()
-                counts.columns = ["Type", "Count"]
-                kpi["issue_types"] = counts.to_dict(orient="records")
-            else:
-                kpi["issue_types"] = []
-        else:
-            kpi["issue_types"] = []
 
         user_kpi_data[user] = kpi
 
