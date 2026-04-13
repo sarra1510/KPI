@@ -288,7 +288,7 @@ def calculate():
                 df_worklog, df_end, key_col_end
             )
 
-        user_list, user_kpi_data = calc_kpi_per_user(df_end, df_worklog, key_col_end)
+        user_list, user_kpi_data = calc_kpi_per_user(df_end, df_worklog, key_col_end, mode=mode)
 
     except ValueError as e:
         flash(str(e), "danger")
